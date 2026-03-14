@@ -1,0 +1,40 @@
+# Android App Template — Agent-Native Governance Kit
+
+> A GitHub Copilot governance kit for Android app development (Kotlin, Jetpack Compose, MVVM, Clean Architecture, Hilt). All artifacts target autonomous agent workflows.
+
+## Agents
+
+- [Overlord](.github/agents/overlord.agent.md): Orchestrator agent — requirements refinement, ExecPlan gate, agent delegation, mandatory code review
+- [Developer](.github/agents/developer.agent.md): Implementation specialist — Kotlin/Compose patterns, Clean Architecture compliance
+- [Debugger](.github/agents/debugger.agent.md): Investigation specialist — Logcat, LeakCanary, StrictMode triage
+- [Testing](.github/agents/testing.agent.md): TDD specialist — JUnit 5, MockK, Turbine, Compose UI Test
+- [Code Reviewer](.github/agents/code-reviewer.agent.md): Review checklist — Kotlin idioms, Compose best practices, compound learning loop
+
+## Instructions
+
+- [Repository-wide](.github/copilot-instructions.md): Build/test commands, project layout, agent roster (~2 pages)
+- [Kotlin](.github/instructions/kotlin.instructions.md): Kotlin coding standards — null safety, coroutines, sealed classes, naming, Hilt
+- [Compose](.github/instructions/compose.instructions.md): Compose patterns — stateless composables, state hoisting, Material 3, previews
+- [Gradle](.github/instructions/gradle.instructions.md): Gradle rules — version catalogs, convention plugins, dependency management
+- [Architecture](.github/instructions/architecture.instructions.md): Clean Architecture layers — domain, data, presentation, dependency direction
+
+## Skills
+
+- [build-and-test](.github/skills/build-and-test/SKILL.md): Gradle build, test, lint, detekt workflow
+- [get-api-docs](.github/skills/get-api-docs/SKILL.md): Context Hub (chub) API documentation retrieval
+
+## Hooks
+
+- [Quality Gate](.github/hooks/quality-gate.json): Three lifecycle hooks — Stop (ktlint + detekt gate), PostToolUse (auto-format), SessionStart (context injection)
+
+## Planning
+
+- [ExecPlan Standard](.github/planning/PLANS.md): When and how to write ExecPlans
+- [ExecPlan Template](.github/planning/execplans/_TEMPLATE.md): Starting template for new plans
+
+## Configuration
+
+- [detekt](detekt.yml): Static analysis — strict-from-start
+- [EditorConfig](.editorconfig): Formatting rules for ktlint
+- [CI](.github/workflows/android-ci.yml): GitHub Actions — build, test, lint, detekt on push/PR
+- [Agent Guidance](AGENTS.md): Root agent guidance and ExecPlan trigger policy

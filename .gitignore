@@ -1,0 +1,60 @@
+# Android / Gradle
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.aab
+output.json
+output-metadata.json
+
+# Kotlin
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle wrapper (keep wrapper jar committed for reproducible builds)
+# Uncomment below to ignore wrapper jar:
+# gradle/wrapper/gradle-wrapper.jar
+
+# Gradle cache
+.gradle/
+
+# Local configuration
+local.properties
+*.log
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Keystore files (do not commit signing keys)
+*.jks
+*.keystore
+
+# Google Services (contains API keys)
+google-services.json
+
+# Proguard
+proguard/
+
+# Coverage reports
+/coverage/
+jacoco/
+
+# detekt reports
+/build/reports/detekt/
+
+# ktlint reports
+/build/reports/ktlint/

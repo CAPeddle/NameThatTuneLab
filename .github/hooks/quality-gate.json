@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/quality-gate.sh",
+        "windows": "powershell -ExecutionPolicy Bypass -File .github\\hooks\\scripts\\quality-gate.ps1",
+        "timeout": 120
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/auto-format.sh",
+        "windows": "powershell -ExecutionPolicy Bypass -File .github\\hooks\\scripts\\auto-format.ps1",
+        "timeout": 30
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "./.github/hooks/scripts/session-context.sh",
+        "windows": "powershell -ExecutionPolicy Bypass -File .github\\hooks\\scripts\\session-context.ps1",
+        "timeout": 10
+      }
+    ]
+  }
+}
