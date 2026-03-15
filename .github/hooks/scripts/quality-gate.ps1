@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Quality gate hook — runs ktlint + detekt on modified .kt files at session Stop.
+    Quality gate hook -- runs ktlint + detekt on modified .kt files at session Stop.
 .DESCRIPTION
     Reads JSON from stdin (hook protocol). Checks stop_hook_active to prevent
     infinite loops. Runs ktlint and detekt on git-modified .kt files.
@@ -25,7 +25,7 @@ $stopHookActive = $inputJson.stop_hook_active
 if ($stopHookActive -eq $true) {
     $result = @{
         continue = $true
-        systemMessage = "Quality gate skipped — stop_hook_active is true (loop prevention)."
+        systemMessage = "Quality gate skipped -- stop_hook_active is true (loop prevention)."
         hookSpecificOutput = @{
             decision = "allow"
             reason = "Loop prevention: stop_hook_active was true."
@@ -48,7 +48,7 @@ try {
 if ($modifiedFiles.Count -eq 0) {
     $result = @{
         continue = $true
-        systemMessage = "Quality gate passed — no modified .kt files to check."
+        systemMessage = "Quality gate passed -- no modified .kt files to check."
         hookSpecificOutput = @{
             decision = "allow"
             reason = "No modified Kotlin files found."
@@ -74,7 +74,7 @@ try {
         $failures += "ktlint: $($ktlintOutput -join '; ')"
     }
 } catch {
-    # ktlint not installed — try via Gradle
+    # ktlint not installed -- try via Gradle
     try {
         $ktlintOutput = & ./gradlew ktlintCheck --quiet 2>&1
         if ($LASTEXITCODE -eq 0) {
@@ -96,7 +96,7 @@ try {
         $failures += "detekt: $($detektOutput -join '; ')"
     }
 } catch {
-    # detekt not installed — try via Gradle
+    # detekt not installed -- try via Gradle
     try {
         $detektOutput = & ./gradlew detekt --quiet 2>&1
         if ($LASTEXITCODE -eq 0) {
@@ -113,7 +113,7 @@ try {
 if ($failures.Count -eq 0) {
     $result = @{
         continue = $true
-        systemMessage = "Quality gate PASSED — $gatesPassed/$gatesTotal gates passed for $($modifiedFiles.Count) file(s)."
+        systemMessage = "Quality gate PASSED -- $gatesPassed/$gatesTotal gates passed for $($modifiedFiles.Count) file(s)."
         hookSpecificOutput = @{
             decision = "allow"
             reason = "All gates passed."
@@ -127,7 +127,7 @@ if ($failures.Count -eq 0) {
 } else {
     $result = @{
         continue = $true
-        stopReason = "Quality gate FAILED — fix the following issues before completing."
+        stopReason = "Quality gate FAILED -- fix the following issues before completing."
         systemMessage = "Quality gate FAILED ($gatesPassed/$gatesTotal passed). Failures:`n$($failures -join "`n")`nFix these issues and try again."
         hookSpecificOutput = @{
             decision = "block"
