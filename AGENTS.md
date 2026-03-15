@@ -39,6 +39,18 @@ Agents that skip the planning step and begin coding immediately tend to produce 
 
 Read the full ExecPlan standard at `.github/planning/PLANS.md`.
 
+## Overlord Planning Edit Rule
+
+- The `Overlord` agent is the owner of planning decisions and ExecPlan quality.
+- `Overlord` may use edit capabilities **only** for planning artifacts in `.github/planning/execplans/*.md`.
+- `Overlord` must not use edit capabilities for production source code, tests, build scripts, CI, or hook scripts.
+- If `Overlord` cannot edit in the current environment, it must delegate ExecPlan drafting to `Developer` and then resume orchestration and quality gating.
+
+Required fallback sequence when edit is unavailable:
+1. `Overlord` creates a handoff to `Developer` to draft the ExecPlan from the template.
+2. `Overlord` reviews and finalizes acceptance criteria/milestones in chat.
+3. `Overlord` delegates implementation/testing/review as normal.
+
 ## Quality Gate
 
 Every agent session ends with an automated quality gate (`Stop` lifecycle hook) that verifies:

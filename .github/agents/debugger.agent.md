@@ -2,15 +2,18 @@
 name: Debugger
 description: "Investigation specialist — Logcat analysis, LeakCanary triage, StrictMode violations, crash diagnosis. Invoke me to diagnose bugs and runtime issues."
 tools:
-  - filesystem
-  - terminal
   - search
+  - runCommands
+  - problems
+  - terminalLastCommand
+  - terminalSelection
+  - changes
 handoffs:
   - label: "Apply this fix"
-    agent: developer
+    agent: Developer
     prompt: "Apply the fix described in my investigation report. Follow the implementation steps exactly."
   - label: "Verify the fix"
-    agent: testing
+    agent: Testing
     prompt: "Verify that the fix resolves the original issue. Run regression tests."
 ---
 

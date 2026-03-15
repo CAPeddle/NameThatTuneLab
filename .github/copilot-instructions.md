@@ -92,3 +92,15 @@ The `android-ci.yml` workflow runs on push/PR to `main` and `develop`:
 ## Planning
 
 Tasks touching >3 files require an **ExecPlan**. See `.github/planning/PLANS.md` for the authoring standard and `.github/planning/execplans/_TEMPLATE.md` for the template.
+
+## Overlord Planning Edit Rule
+
+- The `Overlord` agent owns planning decisions and ExecPlan quality.
+- `Overlord` may use edit capabilities **only** for planning artifacts in `.github/planning/execplans/*.md`.
+- `Overlord` must not use edit capabilities for production code, tests, build scripts, CI, or hook scripts.
+- If `Overlord` cannot edit in the current environment, it must delegate ExecPlan drafting to `Developer`, then resume orchestration and quality gating.
+
+Fallback sequence when edit is unavailable:
+1. `Overlord` hands off to `Developer` to draft the ExecPlan from `.github/planning/execplans/_TEMPLATE.md`.
+2. `Overlord` reviews and finalizes acceptance criteria and milestones.
+3. `Overlord` delegates implementation, testing, and code review as normal.

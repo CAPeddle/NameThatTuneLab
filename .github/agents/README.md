@@ -69,6 +69,11 @@ Done
 | Testing | Code Reviewer | Tests pass | "Tests pass — review ready" |
 | Code Reviewer | Developer | Changes requested | "Address review comments" |
 
+## Planning Governance Note
+
+- Overlord planning/edit policy is defined in `AGENTS.md` and `.github/copilot-instructions.md` under **Overlord Planning Edit Rule**.
+- Overlord may edit only `.github/planning/execplans/*.md`; if edit is unavailable, hand off ExecPlan drafting to Developer and then resume orchestration.
+
 ## Skills Available to All Agents
 
 | Skill | Directory | Purpose |

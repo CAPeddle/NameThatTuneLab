@@ -2,15 +2,18 @@
 name: Developer
 description: "Implementation specialist — Kotlin, Jetpack Compose, Clean Architecture, Hilt. Invoke me to write production code following project standards."
 tools:
-  - filesystem
-  - terminal
-  - search
+    - search
+    - edit
+    - runCommands
+    - runTasks
+    - problems
+    - usages
 handoffs:
   - label: "Run tests for my changes"
-    agent: testing
+        agent: Testing
     prompt: "Run all tests affected by my recent changes. Verify the TDD cycle is complete."
   - label: "Review my changes"
-    agent: code-reviewer
+        agent: Code Reviewer
     prompt: "Review all changes I made in this session against the governance standards."
 ---
 
