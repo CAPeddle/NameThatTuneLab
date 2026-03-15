@@ -14,7 +14,7 @@ Agents operating in a fork of this repo immediately have working Copilot governa
 | Path-specific instructions | `.github/instructions/` | Kotlin, Compose, Gradle, Architecture coding standards |
 | Agent definitions | `.github/agents/` | Overlord, Developer, Debugger, Testing, Code Reviewer |
 | Lifecycle hooks | `.github/hooks/` | Quality gate (`Stop`), auto-format (`PostToolUse`), context (`SessionStart`) |
-| Agent skills | `.github/skills/` | `build-and-test`, `get-api-docs` (agentskills.io standard) |
+| Agent skills | `.github/skills/` | `build-and-test`, `get-api-docs`, `git-commit` (agentskills.io standard) |
 | Planning infrastructure | `.github/planning/` | ExecPlan authoring standard + template |
 | CI workflow | `.github/workflows/` | Build, test, lint, detekt on push/PR |
 | Static analysis | `detekt.yml` | Strict-from-start detekt configuration |

@@ -10,7 +10,7 @@ This repository is an **agent-native** governance kit. All instructions, agents,
   hooks/           → Lifecycle hooks (quality gate, auto-format, session context)
   instructions/    → Path-specific coding standards (Kotlin, Compose, Gradle, Architecture)
   planning/        → ExecPlan authoring standard and templates
-  skills/          → Agent skills (build-and-test, get-api-docs)
+  skills/          → Agent skills (build-and-test, get-api-docs, git-commit)
   workflows/       → GitHub Actions CI
   copilot-instructions.md → Repository-wide agent instructions
 ```

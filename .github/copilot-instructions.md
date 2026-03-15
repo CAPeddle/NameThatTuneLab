@@ -66,7 +66,7 @@ app/
 | `.github/agents/` | Agent definitions (Overlord, Developer, Debugger, Testing, Code Reviewer) |
 | `.github/hooks/` | Lifecycle hooks (quality gate, auto-format, session context) |
 | `.github/instructions/` | Path-specific coding standards |
-| `.github/skills/` | Agent skills (build-and-test, get-api-docs) |
+| `.github/skills/` | Agent skills (build-and-test, get-api-docs, git-commit) |
 | `.github/planning/` | ExecPlan standard + templates |
 | `.github/workflows/android-ci.yml` | CI pipeline |
 

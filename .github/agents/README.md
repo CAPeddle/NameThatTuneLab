@@ -75,6 +75,7 @@ Done
 |-------|-----------|---------|
 | `build-and-test` | `.github/skills/build-and-test/` | Gradle build, test, lint, detekt workflow |
 | `get-api-docs` | `.github/skills/get-api-docs/` | Context Hub (chub) API documentation retrieval |
+| `git-commit` | `.github/skills/git-commit/` | Conventional Commits — analyze diff, generate message, commit |
 
 ## Compound Learning Loop
 
