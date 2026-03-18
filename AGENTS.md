@@ -1,6 +1,12 @@
-# Agent Guidance — Android App Template
+# Agent Guidance — NameThatTuneLab
 
 This repository is an **agent-native** governance kit. All instructions, agents, hooks, skills, and planning artifacts are designed for autonomous Copilot agent workflows.
+
+## Repository Purpose
+
+NameThatTuneLab is an Android app built with Kotlin, Jetpack Compose, and Clean Architecture.
+This repository also contains governance assets (agents, instructions, hooks, skills, planning templates)
+so Copilot agents can implement, test, and review changes consistently.
 
 ## Repository Structure
 
@@ -8,9 +14,9 @@ This repository is an **agent-native** governance kit. All instructions, agents,
 .github/
   agents/          → Agent definitions (Overlord, Developer, Debugger, Testing, Code Reviewer)
   hooks/           → Lifecycle hooks (quality gate, auto-format, session context)
-  instructions/    → Path-specific coding standards (Kotlin, Compose, Gradle, Architecture)
+  instructions/    → Path-specific coding standards (Kotlin, Compose, Gradle, Architecture) + deployment instruction
   planning/        → ExecPlan authoring standard and templates
-  skills/          → Agent skills (build-and-test, get-api-docs, git-commit)
+  skills/          → Agent skills (build-and-test, get-api-docs, git-commit, deploy-to-device)
   workflows/       → GitHub Actions CI
   copilot-instructions.md → Repository-wide agent instructions
 ```
@@ -61,6 +67,12 @@ Every agent session ends with an automated quality gate (`Stop` lifecycle hook) 
 If the gate fails, the agent session is blocked from completing until violations are resolved.
 
 Additional hooks run at `PostToolUse` (auto-format after file edits) and `SessionStart` (context injection).
+
+## Device Deployment
+
+Use the project deployment instruction and skill for connected-device installs:
+- .github/instructions/deployment.instructions.md
+- .github/skills/deploy-to-device/SKILL.md
 
 ## Alternative Agent Guidance Files
 

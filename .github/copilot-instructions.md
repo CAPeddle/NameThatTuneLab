@@ -1,16 +1,28 @@
-# Copilot Instructions — Android App Template
+# Copilot Instructions — NameThatTuneLab
 
-This is an **agent-native** governance kit for Android development. All agents, instructions, hooks, and skills are designed for autonomous agent workflows.
+This repository is an Android app project with **agent-native governance** for Copilot workflows.
 
 ## Repository Purpose
 
-A template repository providing Copilot governance for Android apps built with Kotlin, Jetpack Compose, and Clean Architecture. Fork this repo, replace `[PLACEHOLDER]` markers, and agents immediately have working governance.
+NameThatTuneLab is an Android app built with Kotlin, Jetpack Compose, and Clean Architecture.
+This repository also contains governance assets (agents, instructions, hooks, skills, planning templates)
+so Copilot agents can implement, test, and review changes consistently.
+
+## Project Identity
+
+| Field | Value |
+|------|--------|
+| Project | NameThatTuneLab |
+| Root module | `:app` |
+| Package / namespace | `com.capeddle.namethattunelab` |
+| Application ID | `com.capeddle.namethattunelab` |
+| Debug app ID suffix | `.debug` |
 
 ## Technology Stack
 
 | Area | Choice |
 |------|--------|
-| Language | Kotlin (latest stable) |
+| Language | Kotlin (JVM 17) |
 | UI | Jetpack Compose (Material 3) |
 | Architecture | MVVM + Clean Architecture |
 | DI | Hilt |
@@ -18,57 +30,52 @@ A template repository providing Copilot governance for Android apps built with K
 | Build | Gradle (Kotlin DSL) |
 | Formatting | ktlint (via `.editorconfig`) |
 | Static Analysis | detekt (`detekt.yml`) + Android Lint |
-| Unit Testing | JUnit 5 + MockK + Turbine |
-| UI Testing | Compose UI Test + Robolectric |
+| Unit Testing | JUnit 5 + MockK + Turbine + Robolectric |
+| UI Testing | Compose UI Test |
 
-## Directory Structure (Clean Architecture)
+## Directory Structure
 
-```
+```text
 app/
-├── src/main/kotlin/[PLACEHOLDER:package-name]/
+├── src/main/kotlin/com/capeddle/namethattunelab/
 │   ├── domain/          ← Business logic, use cases, repository interfaces
-│   │   ├── model/       ← Domain entities (pure Kotlin, no Android imports)
-│   │   ├── repository/  ← Repository interfaces
-│   │   └── usecase/     ← Use cases (single responsibility)
 │   ├── data/            ← Repository implementations, data sources, mappers
-│   │   ├── local/       ← Room DAOs, DataStore
-│   │   ├── remote/      ← Retrofit services, API models
-│   │   ├── repository/  ← Repository implementations
-│   │   └── mapper/      ← Data ↔ Domain mappers
-│   ├── presentation/    ← ViewModels, UI state, Compose screens
-│   │   ├── screen/      ← Screen composables + ViewModels
-│   │   ├── component/   ← Reusable UI components
-│   │   ├── navigation/  ← Navigation graph
-│   │   └── theme/       ← Material 3 theme
+│   ├── presentation/    ← ViewModels, UI state, Compose screens/components
 │   └── di/              ← Hilt modules
-├── src/test/            ← Unit tests (JUnit 5 + MockK)
+├── src/test/            ← Unit tests (JUnit 5 + MockK + Turbine)
 └── src/androidTest/     ← Instrumented tests (Compose UI Test)
 ```
 
-## Build & Test Commands
+## Build & Validation Commands
 
 ```bash
-./gradlew build                # Full build
-./gradlew test                 # Unit tests
-./gradlew connectedAndroidTest # UI tests (requires emulator)
-./gradlew ktlintCheck          # Formatting check
-./gradlew ktlintFormat         # Auto-format
-./gradlew detekt               # Static analysis
-./gradlew lint                 # Android Lint
+./gradlew assembleDebug
+./gradlew testDebugUnitTest
+./gradlew ktlintCheck
+./gradlew detekt
+./gradlew lintDebug
+```
+
+Common local quality gate:
+
+```bash
+./gradlew ktlintCheck detekt lintDebug testDebugUnitTest assembleDebug
 ```
 
 ## Key File Locations
 
 | File | Purpose |
 |------|---------|
-| `detekt.yml` | Static analysis config (strict-from-start) |
-| `.editorconfig` | Formatting rules (ktlint reads this) |
+| `detekt.yml` | Static analysis configuration |
+| `.editorconfig` | Formatting rules (ktlint) |
 | `.github/agents/` | Agent definitions (Overlord, Developer, Debugger, Testing, Code Reviewer) |
-| `.github/hooks/` | Lifecycle hooks (quality gate, auto-format, session context) |
-| `.github/instructions/` | Path-specific coding standards |
-| `.github/skills/` | Agent skills (build-and-test, get-api-docs, git-commit) |
+| `.github/hooks/` | Lifecycle hooks (session context, auto-format, quality gate) |
+| `.github/instructions/` | Path-specific coding standards + deployment instruction |
+| `.github/skills/` | Agent skills (`build-and-test`, `get-api-docs`, `git-commit`, `deploy-to-device`) |
 | `.github/planning/` | ExecPlan standard + templates |
-| `.github/workflows/android-ci.yml` | CI pipeline |
+| `.github/workflows/android-ci.yml` | CI workflow |
+| `app/build.gradle.kts` | App module build config |
+| `gradle/libs.versions.toml` | Version catalog |
 
 ## Agent Roster
 
@@ -76,8 +83,8 @@ app/
 |-------|------|--------|
 | Overlord | Orchestrator — planning, delegation, review gate | `@overlord` |
 | Developer | Implementation — Kotlin/Compose/Architecture | `@developer` |
-| Debugger | Investigation — Logcat, LeakCanary, StrictMode | `@debugger` |
-| Testing | TDD — JUnit 5, MockK, Compose UI Test | `@testing` |
+| Debugger | Investigation — runtime/service/debug workflows | `@debugger` |
+| Testing | TDD — unit/instrumented verification | `@testing` |
 | Code Reviewer | Review — idioms, patterns, compound learning | `@code-reviewer` |
 
 ## CI Workflow
@@ -85,13 +92,14 @@ app/
 The `android-ci.yml` workflow runs on push/PR to `main` and `develop`:
 1. Build (`assembleDebug`)
 2. Unit tests (`testDebugUnitTest`)
-3. ktlint check
-4. detekt
-5. Android Lint
+3. Formatting check (`ktlintCheck`)
+4. Static analysis (`detekt`)
+5. Android lint (`lintDebug`)
 
 ## Planning
 
-Tasks touching >3 files require an **ExecPlan**. See `.github/planning/PLANS.md` for the authoring standard and `.github/planning/execplans/_TEMPLATE.md` for the template.
+Tasks touching more than 3 files require an **ExecPlan**.
+See `.github/planning/PLANS.md` and `.github/planning/execplans/_TEMPLATE.md`.
 
 ## Overlord Planning Edit Rule
 
@@ -104,3 +112,16 @@ Fallback sequence when edit is unavailable:
 1. `Overlord` hands off to `Developer` to draft the ExecPlan from `.github/planning/execplans/_TEMPLATE.md`.
 2. `Overlord` reviews and finalizes acceptance criteria and milestones.
 3. `Overlord` delegates implementation, testing, and code review as normal.
+
+## Device Deployment
+
+Use the deployment instruction and skill for connected-phone installs:
+- Instruction: `.github/instructions/deployment.instructions.md`
+- Skill: `.github/skills/deploy-to-device/SKILL.md`
+
+Quick commands:
+
+```bash
+adb devices
+./gradlew :app:installDebug
+```
