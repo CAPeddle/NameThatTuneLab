@@ -4,7 +4,7 @@
 /local.properties
 /.idea/
 .DS_Store
-/build/
+**/build/
 /captures
 .externalNativeBuild/
 .cxx/
@@ -54,7 +54,7 @@ proguard/
 jacoco/
 
 # detekt reports
-/build/reports/detekt/
+**/build/reports/detekt/
 
 # ktlint reports
-/build/reports/ktlint/
+**/build/reports/ktlint/

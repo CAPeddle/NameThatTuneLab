@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">NameThatTuneLab</string>
+    <string name="permission_notification_listener_title">Notification Access Required</string>
+    <string name="permission_notification_listener_rationale">NameThatTuneLab needs notification access to detect music playing on your device. Please enable it in Settings.</string>
+    <string name="permission_granted">Listening for music</string>
+    <string name="permission_not_granted">Notification access not granted</string>
+    <string name="permission_missing">Notification access required — tap to open Settings</string>
+    <string name="no_recent_tracks">No tracks detected yet</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="no_track_playing">No track detected</string>
+    <string name="unknown_artist">Unknown Artist</string>
+    <string name="unknown_year">—</string>
+    <string name="last_announced">Last announced</string>
+    <string name="recent_tracks">Recent Tracks</string>
+    <string name="notification_channel_id">ntl_pipeline</string>
+    <string name="notification_channel_name">Now Playing Pipeline</string>
+    <string name="notification_title">Listening for music…</string>
+    <string name="notification_text">NameThatTuneLab is running</string>
+</resources>

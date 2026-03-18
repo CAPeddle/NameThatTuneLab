@@ -2,14 +2,12 @@
 name: Code Reviewer
 description: "Code review specialist — Kotlin idioms, Compose best practices, Clean Architecture compliance, compound learning loop. Invoke me to review changes."
 tools:
-  - search
-  - changes
-  - problems
-  - usages
+  - edit
   - runCommands
+  - search
 handoffs:
   - label: "Address review comments"
-    agent: Developer
+    agent: developer
     prompt: "Address the review findings below. Fix all ERROR-level issues. Review WARNING-level issues and fix or justify."
 ---
 

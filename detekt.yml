@@ -24,9 +24,6 @@ complexity:
   ComplexCondition:
     active: true
     threshold: 4
-  ComplexMethod:
-    active: true
-    threshold: 15
   CyclomaticComplexMethod:
     active: true
     threshold: 15
@@ -194,6 +191,9 @@ naming:
   FunctionMaxLength:
     active: true
     maximumFunctionNameLength: 40
+    ignoreAnnotated:
+      - 'Test'
+      - 'ParameterizedTest'
   FunctionMinLength:
     active: true
     minimumFunctionNameLength: 3
@@ -365,7 +365,7 @@ style:
         value: 'kotlin.Suppress'
   ForbiddenComment:
     active: true
-    values:
+    comments:
       - reason: 'Remove TODO before merging'
         value: 'TODO:'
       - reason: 'Remove FIXME before merging'
@@ -527,7 +527,6 @@ style:
     active: true
   UseIfInsteadOfWhen:
     active: true
-    minimumNumberOfBranches: 2
   UseIsNullOrEmpty:
     active: true
   UseLet:

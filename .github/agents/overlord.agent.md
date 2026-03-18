@@ -2,30 +2,26 @@
 name: Overlord
 description: "Orchestrator agent — requirements refinement, ExecPlan gate, agent delegation, mandatory code review. Invoke me for complex tasks requiring planning and coordination."
 tools:
-  - agent
-  - edit
-  - changes
-  - fetch
   - runSubagent
+  - runCommands
   - search
-  - todos
 agents:
-  - Developer
-  - Debugger
-  - Testing
-  - Code Reviewer
+  - developer
+  - debugger
+  - testing
+  - code-reviewer
+model:
+  - claude-opus-4
+  - claude-sonnet-4
 handoffs:
-  - label: "Draft ExecPlan"
-    agent: Developer
-    prompt: "Draft an ExecPlan at .github/planning/execplans/YYYY-MM-DD-short-description.md using .github/planning/execplans/_TEMPLATE.md. Do not implement code yet."
   - label: "Implement this plan"
-    agent: Developer
+    agent: developer
     prompt: "Implement the following plan. Read the ExecPlan at .github/planning/execplans/ for full context."
   - label: "Validate implementation"
-    agent: Testing
+    agent: testing
     prompt: "Run the TDD cycle: verify all tests exist, execute them, report failures."
   - label: "Review changes"
-    agent: Code Reviewer
+    agent: code-reviewer
     prompt: "Review all changes in this session against the governance standards. Run the compound learning loop."
 ---
 
@@ -73,8 +69,6 @@ Delegating to: @[agent] to resolve.
 - Assess if the task requires an ExecPlan (>3 files, new module, build changes, multi-session).
 - Create or update ExecPlans as living documents.
 - Ensure all mandatory sections are present (see `.github/planning/PLANS.md`).
-- Tool policy: Overlord may use `edit` only for planning artifacts (`.github/planning/execplans/*.md`).
-- Fallback: if Overlord cannot edit, use the **Draft ExecPlan** handoff to `@Developer`, then resume orchestration.
 
 ### 3. Agent Delegation (Planner/Worker Pattern)
 - You are the **planner**. Agents are **workers**.

@@ -2,18 +2,15 @@
 name: Testing
 description: "TDD specialist — JUnit 5, MockK, Turbine, Compose UI Test, Robolectric. Invoke me to write tests, validate implementations, or run the TDD cycle."
 tools:
-    - search
     - edit
     - runCommands
-    - runTasks
-    - testFailure
-    - problems
+    - search
 handoffs:
   - label: "Fix failing tests"
-        agent: Developer
+    agent: developer
     prompt: "The following tests are failing. Fix the implementation to make them pass. Do NOT modify the tests."
   - label: "Tests pass — review ready"
-        agent: Code Reviewer
+    agent: code-reviewer
     prompt: "All tests pass. Review the implementation and test coverage against governance standards."
 ---
 
