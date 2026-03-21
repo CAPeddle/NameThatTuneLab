@@ -79,8 +79,12 @@ Done
 | Skill | Directory | Purpose |
 |-------|-----------|---------|
 | `build-and-test` | `.github/skills/build-and-test/` | Gradle build, test, lint, detekt workflow |
+| `deploy-to-device` | `.github/skills/deploy-to-device/` | ADB install and device connectivity |
 | `get-api-docs` | `.github/skills/get-api-docs/` | Context Hub (chub) API documentation retrieval |
 | `git-commit` | `.github/skills/git-commit/` | Conventional Commits — analyze diff, generate message, commit |
+| `review-upstream-sources` | `.github/skills/review-upstream-sources/` | Review external governance sources, update local artifacts, bootstrap new repos |
+| `validate-agent-tools` | `.github/skills/validate-agent-tools/` | Validate and fix `tools:` arrays in `.agent.md` files |
+| `adopt-template-updates` | `.github/skills/adopt-template-updates/` | Safely adopt Generic template improvements into this project |
 
 ## Compound Learning Loop
 
@@ -99,9 +103,13 @@ Review → Findings → Learnings → Governance Update → Better Reviews → .
 
 ## Model Selection Guidance
 
+*Based on Cursor "Scaling Agents" (Jan 2026) findings.*
+
 | Task Type | Recommended Model | Rationale |
 |-----------|------------------|-----------|
-| Planning, complex reasoning | Claude Opus | Stronger reasoning for architecture decisions |
-| Implementation, review | Claude Sonnet | Fast, cost-effective for code generation |
+| Planning, complex reasoning | Claude Opus / high-capability model | Sustained focus, low drift for orchestration |
+| Implementation, review | Claude Sonnet | Fast, context-efficient for code generation |
 | Debugging, investigation | Claude Sonnet | Good balance of speed and analysis depth |
 | Testing, TDD | Claude Sonnet | Pattern-based test generation |
+
+Use the best model for the role, not one universal model. Planner agents (Overlord) benefit most from the highest-quality models.

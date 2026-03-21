@@ -16,7 +16,7 @@ so Copilot agents can implement, test, and review changes consistently.
   hooks/           → Lifecycle hooks (quality gate, auto-format, session context)
   instructions/    → Path-specific coding standards (Kotlin, Compose, Gradle, Architecture) + deployment instruction
   planning/        → ExecPlan authoring standard and templates
-  skills/          → Agent skills (build-and-test, get-api-docs, git-commit, deploy-to-device)
+  skills/          → Agent skills (build-and-test, get-api-docs, git-commit, deploy-to-device, review-upstream-sources, validate-agent-tools, adopt-template-updates)
   workflows/       → GitHub Actions CI
   copilot-instructions.md → Repository-wide agent instructions
 ```
@@ -25,12 +25,17 @@ so Copilot agents can implement, test, and review changes consistently.
 
 ### When Required
 
-An ExecPlan is **mandatory** when the task involves:
+Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when any of the following applies:
 
 - Creating or modifying more than 3 files
 - Introducing a new module, layer, or architectural boundary
 - Changing build configuration or CI pipeline
 - Any task estimated to exceed a single agent session
+- Integrating a new third-party dependency
+- Modifying agent definitions, hooks, or skills
+- **Investigation-first tasks** — tasks where the first step is to explore, evaluate options, or compile findings before implementing. The ExecPlan must exist before the investigation begins, not only before the implementation phase.
+
+> **Common failure mode:** A prompt phrased as "investigate first, then implement" may be treated as not requiring an ExecPlan until implementation starts. This is incorrect — any multi-step task (including one that begins with research or evaluation) requires an ExecPlan before the first step.
 
 ### When NOT Required
 
@@ -38,10 +43,7 @@ An ExecPlan is **mandatory** when the task involves:
 - Adding a single test
 - Documentation-only updates
 - Renaming or moving a single symbol
-
-### Common Failure Mode
-
-Agents that skip the planning step and begin coding immediately tend to produce incomplete implementations that violate architectural boundaries. **Always check if a plan is needed before writing code.**
+- Trivial formatting changes
 
 Read the full ExecPlan standard at `.github/planning/PLANS.md`.
 
@@ -59,7 +61,7 @@ Required fallback sequence when edit is unavailable:
 
 ## Quality Gate
 
-Every agent session ends with an automated quality gate (`Stop` lifecycle hook) that verifies:
+Every agent session ends with an automated quality gate (`agentStop` lifecycle hook) that verifies:
 
 1. **Formatting** — `ktlint` passes on all modified `.kt` files
 2. **Static Analysis** — `detekt` passes on all modified `.kt` files

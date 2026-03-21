@@ -4,7 +4,7 @@ This document defines when and how to write ExecPlans for this repository. All a
 
 ## When an ExecPlan is Required
 
-An ExecPlan **must** be created before implementation begins when the task involves:
+Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when the task involves:
 
 - Creating or modifying **more than 3 files**
 - Introducing a **new module, layer, or architectural boundary**
@@ -12,6 +12,9 @@ An ExecPlan **must** be created before implementation begins when the task invol
 - Any task estimated to exceed **a single agent session**
 - Integrating a **new third-party dependency**
 - Modifying **agent definitions, hooks, or skills**
+- **Investigation-first tasks** — tasks where the first step is to explore, evaluate options, or compile findings before implementing. The ExecPlan must exist before the investigation begins, not only before the implementation phase.
+
+> **Common failure mode:** A prompt phrased as "investigate first, then implement" may be treated as not requiring an ExecPlan until implementation starts. This is incorrect — any multi-step task (including one that begins with research or evaluation) requires an ExecPlan before the first step.
 
 ## When an ExecPlan is NOT Required
 
@@ -108,7 +111,29 @@ ExecPlans are **living documents**. Update them as work proceeds:
 
 ### Atomic Task Rule
 
-Each step in "Concrete Steps" should be **atomic** — completable in a single focused session without context loss.
+Each item in "Concrete Steps" must be **atomic** — completable in a single focused agent session without context loss.
+
+Agent sessions degrade in quality as context fills. ExecPlan tasks must be sized to prevent context overflow.
+
+### Context Pressure Budget
+
+Each agent session has a **context pressure budget**. Operations add to the score:
+
+| Operation | Score |
+|-----------|-------|
+| Small file read (< 100 lines) | +1 |
+| Large file read (≥ 100 lines) or repeated range reads | +2 |
+| Broad workspace search | +3 |
+| Long terminal or test output | +3 |
+| Multi-file diff review | +2 |
+| Each tool call after the 5th in a burst | +1 |
+
+**Thresholds:**
+- Score < 12: Agent continues freely.
+- Score 12–15: Agent emits a checkpoint and may continue with care.
+- Score ≥ 15: Agent emits a hard checkpoint and **stops** — returns control to Overlord.
+
+Size Concrete Steps so each step stays below the **soft threshold of 12** when planned as a reading exercise. Steps that require reading 5+ large files or performing broad searches exceed budget and must be split.
 
 ### Signs a Step is Too Large
 
@@ -116,5 +141,10 @@ Each step in "Concrete Steps" should be **atomic** — completable in a single f
 - It requires more than 2 agent handoffs
 - It cannot be validated with a single test run
 - It mixes concerns (e.g., UI + data layer in one step)
+- A single step takes more than ~20 tool calls
+- The step requires holding more than 5–6 files in reasoning simultaneously
+- The step mixes research, implementation, and validation in one unit
+
+If an in-progress plan has over-large steps, split them and record the split in `Surprises & Discoveries`.
 
 Split large steps into smaller, independently verifiable sub-steps.

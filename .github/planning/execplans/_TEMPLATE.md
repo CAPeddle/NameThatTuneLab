@@ -14,11 +14,12 @@ This ExecPlan is a living document. Keep `Progress`, `Surprises & Discoveries`, 
 
 [1–3 paragraphs: Why does this work matter? What is the observable outcome when complete?]
 
-**Observable outcome:** [Concrete, testable statement of what success looks like.]
+**Observable outcome:** [Concrete, **testable** statement. Should be answerable with a yes/no by running a command or observing a specific behavior. Avoid vague language like "it works" or "it's better".]
 
 **Term definitions:**
-- *[Term 1]:* [Definition]
-- *[Term 2]:* [Definition]
+> Define every term that could be ambiguous within this plan. If two people might read a word differently, define it here.
+- *[Term 1]:* [Definition — be precise, not colloquial]
+- *[Term 2]:* [Definition — be precise, not colloquial]
 
 ---
 
@@ -78,6 +79,16 @@ This ExecPlan is a living document. Keep `Progress`, `Surprises & Discoveries`, 
 
 ## Plan of Work
 
+> **TDD Order Mandate:** For every code-producing step, the sequence is always:
+> 1. `@testing` writes failing tests (RED)
+> 2. `@developer` writes implementation (GREEN)
+> 3. `@testing` verifies all pass (REFACTOR)
+> 4. `@code-reviewer` reviews
+>
+> Do NOT write implementation before tests exist.
+
+> **Investigation-First Rule:** If this plan involves fixing a bug or diagnosing an unexpected behavior, invoke `@debugger` to produce an investigation report **before** creating any implementation steps. The report's findings should drive the concrete steps below.
+
 ### Milestone 1 — [Name]
 [Description of what this milestone achieves.]
 
@@ -107,14 +118,18 @@ This ExecPlan is a living document. Keep `Progress`, `Surprises & Discoveries`, 
 
 ## Validation and Acceptance
 
-- [ ] [Acceptance criterion 1]
-- [ ] [Acceptance criterion 2]
-- [ ] All tests pass (`./gradlew test`)
-- [ ] No ktlint violations (`./gradlew ktlintCheck`)
-- [ ] No detekt violations (`./gradlew detekt`)
-- [ ] Build succeeds (`./gradlew build`)
-- [ ] Code review completed (via `code-reviewer` agent)
-- [ ] TDD cycle completed for all code changes
+> Use observable, command-verifiable criteria. Prefer: "Running X produces output Y" over "the feature works correctly".
+
+| Criterion | Command / Evidence | Status |
+|-----------|-------------------|--------|
+| [Criterion 1 — observable] | [Command or output to check] | - |
+| [Criterion 2 — observable] | [Command or output to check] | - |
+| All unit tests pass | `./gradlew testDebugUnitTest` — zero failures | - |
+| No ktlint violations | `./gradlew ktlintCheck` — zero warnings | - |
+| No detekt violations | `./gradlew detekt` — zero findings | - |
+| Build succeeds | `./gradlew assembleDebug` — `BUILD SUCCESSFUL` | - |
+| Code review completed | `@code-reviewer` — no blockers | - |
+| TDD cycle completed | RED → GREEN → REFACTOR for all new code | - |
 
 ---
 

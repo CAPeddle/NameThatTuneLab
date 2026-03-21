@@ -93,6 +93,55 @@ When receiving work from `@overlord`:
 4. Hand off to `@developer` for the fix (via handoff button).
 5. After fix, hand off to `@testing` for verification.
 
+## Context Pressure
+
+Track context pressure as you work. Accumulate scores per operation:
+
+| Operation | Score |
+|-----------|-------|
+| Small file read (< 100 lines) | +1 |
+| Large file read (≥ 100 lines) or repeated range reads | +2 |
+| Broad workspace search | +3 |
+| Long terminal or test output | +3 |
+| Multi-file diff review | +2 |
+| Each tool call after the 5th in a burst | +1 |
+
+**Thresholds:**
+- Score < 12: Continue freely.
+- Score 12–15 (soft): Emit a checkpoint — summarize what you've done and what remains.
+- Score ≥ 15 (hard): Emit checkpoint and **stop**. Return control to `@overlord` with your current state.
+
+**Checkpoint format:**
+```
+⚡ CONTEXT CHECKPOINT
+
+Done:
+- [completed investigation step]
+
+Remaining:
+- [next investigation step]
+
+Context pressure score: [N] / 15
+```
+
+## Worker Response Format
+
+When returning findings to `@overlord`, use this structured format:
+
+```
+task_id: <assigned id or step reference>
+status: pass | partial | fail
+findings:
+  - issue: [description]
+    severity: critical | high | medium | low
+    root_cause: [evidence-backed analysis]
+    fix: [specific change needed]
+evidence: <log excerpt, stack trace, or code reference>
+unresolved: <open items requiring further investigation>
+risks: <side effects of proposed fix>
+recommended_next_action: <what Overlord should do next>
+```
+
 ## Debugging Commands
 
 ```bash

@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "Stop": [
+    "agentStop": [
       {
         "type": "command",
         "command": "./.github/hooks/scripts/quality-gate.sh",

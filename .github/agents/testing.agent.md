@@ -2,9 +2,9 @@
 name: Testing
 description: "TDD specialist — JUnit 5, MockK, Turbine, Compose UI Test, Robolectric. Invoke me to write tests, validate implementations, or run the TDD cycle."
 tools:
-    - edit
-    - runCommands
-    - search
+  - edit
+  - runCommands
+  - search
 handoffs:
   - label: "Fix failing tests"
     agent: developer
@@ -144,21 +144,51 @@ Before handing off for implementation, confirm:
 - [ ] Edge cases are covered
 - [ ] Error paths are covered
 
+## Context Pressure
+
+Track context pressure as you work. Accumulate scores per operation:
+
+| Operation | Score |
+|-----------|-------|
+| Small file read (< 100 lines) | +1 |
+| Large file read (≥ 100 lines) or repeated range reads | +2 |
+| Broad workspace search | +3 |
+| Long terminal or test output | +3 |
+| Multi-file diff review | +2 |
+| Each tool call after the 5th in a burst | +1 |
+
+**Thresholds:**
+- Score < 12: Continue freely.
+- Score 12–15 (soft): Emit a checkpoint — summarize what you've done and what remains.
+- Score ≥ 15 (hard): Emit checkpoint and **stop**. Return control to `@overlord` with your current state.
+
+**Checkpoint format:**
+```
+⚡ CONTEXT CHECKPOINT
+
+Done:
+- [completed step]
+
+Remaining:
+- [next step]
+
+Context pressure score: [N] / 15
+```
+
 ## Worker Response Format
 
 ```
-🧪 TEST REPORT
-
-Tests written: [count]
-Tests passing: [count]
-Tests failing: [count]
-
-Coverage summary:
-- [Use case / class]: [what's tested]
-- [Use case / class]: [what's tested]
-
-Failing tests (if any):
-- [test name]: [failure reason]
-
-Ready for: @developer (fix failures) | @code-reviewer (all pass)
+task_id: <assigned id or step reference>
+status: pass | partial | fail
+tests_written: <count>
+tests_passing: <count>
+tests_failing: <count>
+coverage:
+  - [UseCase/class]: [what's tested]
+failing_details:
+  - [test name]: [failure reason]
+evidence: <test runner output snippet>
+unresolved: <open items or blockers, if any>
+risks: <regressions or coverage gaps>
+recommended_next_action: <what Overlord should do next>
 ```
