@@ -13,6 +13,7 @@ import com.capeddle.namethattunelab.domain.usecase.ResolveMetadataUseCase
 import com.capeddle.namethattunelab.domain.usecase.UpdateAppSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,9 +23,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -────────────────────────────────────────────────────────────────────────────
 // UI State
-// ─────────────────────────────────────────────────────────────────────────────
+// -────────────────────────────────────────────────────────────────────────────
 
 data class MainUiState(
     val currentTrack: TrackMetadata? = null,
@@ -35,9 +36,9 @@ data class MainUiState(
     val voiceOverDelayMsInput: String = AppSettings.DEFAULT_VOICE_OVER_DELAY_MS.toString()
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -────────────────────────────────────────────────────────────────────────────
 // ViewModel
-// ─────────────────────────────────────────────────────────────────────────────
+// -────────────────────────────────────────────────────────────────────────────
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -72,9 +73,9 @@ class MainViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
     // Pipeline
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
 
     private fun startListening() {
         _uiState.update { it.copy(isListening = true) }
@@ -120,9 +121,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
     // User actions
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
 
     fun onMusicBrainzUserAgentChanged(value: String) {
         _uiState.update { it.copy(musicBrainzUserAgentInput = value) }
@@ -141,12 +142,19 @@ class MainViewModel @Inject constructor(
                 return@launch
             }
 
-            updateAppSettings(
-                AppSettings(
-                    musicBrainzUserAgent = uiState.value.musicBrainzUserAgentInput,
-                    voiceOverDelayMs = delayMs
+            runCatching {
+                updateAppSettings(
+                    AppSettings(
+                        musicBrainzUserAgent = uiState.value.musicBrainzUserAgentInput,
+                        voiceOverDelayMs = delayMs
+                    )
                 )
-            )
+            }.onSuccess {
+                _uiState.update { it.copy(errorMessage = null) }
+            }.onFailure { throwable ->
+                if (throwable is CancellationException) throw throwable
+                _uiState.update { it.copy(errorMessage = "Failed to save settings: ${throwable.message}") }
+            }
         }
     }
 
@@ -154,9 +162,9 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
     // Helpers
-    // ─────────────────────────────────────────────────────────────────────────
+    // -────────────────────────────────────────────────────────────────────────
 
     private fun buildRecentList(latest: TrackMetadata, existing: List<TrackMetadata>): List<TrackMetadata> {
         val deduped = (listOf(latest) + existing)

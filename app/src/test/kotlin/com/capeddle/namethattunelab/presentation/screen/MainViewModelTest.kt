@@ -13,6 +13,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -211,6 +212,27 @@ class MainViewModelTest {
                     }
                 )
             }
+        }
+
+        @Test
+        fun `saveSettings sets errorMessage when repository throws`() = runTest(testDispatcher) {
+            every { observeNowPlaying() } returns flowOf()
+            coEvery { updateAppSettings(any()) } throws IOException("disk full")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val agentInput = "NameThatTuneLab/1.0 (retry@example.com)"
+            vm.onMusicBrainzUserAgentChanged(agentInput)
+            vm.onVoiceOverDelayChanged(SAVE_DELAY_MS.toString())
+            vm.saveSettings()
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNotNull(state.errorMessage)
+            // Pending inputs retained so the user can retry (Q1 = retain)
+            assertEquals(agentInput, state.musicBrainzUserAgentInput)
+            assertEquals(SAVE_DELAY_MS.toString(), state.voiceOverDelayMsInput)
         }
     }
 
