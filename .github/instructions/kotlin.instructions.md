@@ -41,6 +41,33 @@ suspend fun fetchUser(id: String): Result<User>
 - Use `StateFlow` for UI state, `SharedFlow` for events.
 - Always handle cancellation properly — use `withContext` for dispatcher switching.
 - Never use `GlobalScope`.
+## ViewModel Exception Handling
+
+When a `viewModelScope.launch` block calls a `suspend` function that can throw (e.g., a
+DataStore write, a network request through a use case), use `runCatching` and chain
+`.onSuccess` / `.onFailure`:
+
+```kotlin
+// ✓ Correct: safe coroutine exception handling in ViewModel
+fun saveSettings() {
+    viewModelScope.launch {
+        runCatching {
+            updateAppSettingsUseCase(newSettings)
+        }.onSuccess {
+            _uiState.update { it.copy(errorMessage = null) }
+        }.onFailure { throwable ->
+            if (throwable is CancellationException) throw throwable   // never swallow
+            _uiState.update { it.copy(errorMessage = "Save failed: ${throwable.message}") }
+        }
+    }
+}
+```
+
+Rules:
+- **Always re-throw `CancellationException`** — swallowing it prevents structured concurrency from working.
+- **Clear `errorMessage` on success** — stale error banners persist if `onSuccess` omits the clear.
+- **Do not import `CancellationException` if it is already available via `kotlinx.coroutines`** — check
+  before adding a duplicate import.
 
 ## Naming Conventions
 
@@ -110,3 +137,4 @@ Watch for these common mistakes when reviewing agent-generated Kotlin code:
 6. **Mutable collections in public APIs** — agents expose `MutableList` instead of `List`.
 7. **Catching generic exceptions** — agents write `catch (e: Exception)` instead of specific types.
 8. **Missing sealed class exhaustive `when`** — agents add `else` branches instead of handling all cases.
+9. **Swallowing `CancellationException`** — agents write `catch (e: Exception)` or bare `onFailure` in coroutines without re-throwing `CancellationException`, breaking structured concurrency.

@@ -137,6 +137,41 @@ fun userCard_displaysUserName() {
 }
 ```
 
+## Text Input Fields
+
+When adding `OutlinedTextField` or `TextField` with a specific `ImeAction`:
+
+- **Always pair `ImeAction.Done` with `singleLine = true`.** Without `singleLine = true`, many
+  IME implementations do not reliably surface the Done button, and the field may accept newlines.
+- Declare `val focusManager = LocalFocusManager.current` at the top of the composable (not
+  inside a lambda) — it must be read at composition scope.
+- Add `keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })` to dismiss
+  the keyboard when the user confirms the input.
+
+```kotlin
+// ✓ Correct: number field with Done action that dismisses keyboard
+val focusManager = LocalFocusManager.current
+
+OutlinedTextField(
+    value = uiState.delayInput,
+    onValueChange = onDelayChanged,
+    label = { Text("Delay (ms)") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Number,
+        imeAction = ImeAction.Done,
+    ),
+    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+    singleLine = true,
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
+Required imports:
+- `androidx.compose.foundation.text.KeyboardActions`
+- `androidx.compose.foundation.text.KeyboardOptions`
+- `androidx.compose.ui.platform.LocalFocusManager`
+- `androidx.compose.ui.text.input.ImeAction`
+- `androidx.compose.ui.text.input.KeyboardType`
 ## Navigation
 
 - Use Compose Navigation (`NavHost`, `composable`, `navigate`).
@@ -152,3 +187,4 @@ fun userCard_displaysUserName() {
 4. **Missing previews** — agents forget to add `@Preview` functions.
 5. **`collectAsState` instead of `collectAsStateWithLifecycle`** — agents use the non-lifecycle-aware variant.
 6. **Side effects outside `LaunchedEffect`** — agents call suspend functions directly.
+7. **Missing `singleLine = true` with `ImeAction.Done`** — agents add `ImeAction.Done` to `keyboardOptions` but omit `singleLine = true`, causing unreliable Done button behaviour on many devices.

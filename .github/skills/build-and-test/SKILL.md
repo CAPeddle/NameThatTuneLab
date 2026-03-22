@@ -106,3 +106,18 @@ If `gradlew` is missing, initialize with: `gradle wrapper --gradle-version [PLAC
 | `detekt fails` | Review `detekt.yml` — set `maxIssues: 0` for strict mode |
 | `OOM during build` | Add `org.gradle.jvmargs=-Xmx4g` to `gradle.properties` |
 | `Compose compiler error` | Ensure Compose compiler version matches Kotlin version in version catalog |
+| `detekt shows old findings after a fix` | Re-run with `./gradlew detekt --rerun-tasks` to bypass stale configuration/task cache |
+| `detekt MissingPackageDeclaration at 1:1` | Check file encoding for UTF-8 BOM (`EF BB BF`). Re-save Kotlin files as UTF-8 **without BOM** |
+
+### PowerShell Encoding Note (Windows)
+
+When writing Kotlin files from PowerShell, avoid BOM-prefixed UTF-8 output.
+Use this encoding instance:
+
+```powershell
+$utfNoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($path, $content, $utfNoBom)
+```
+
+Do **not** use `[System.Text.Encoding]::UTF8` for Kotlin source rewrites in this repo,
+as it can produce BOM-prefixed files and trigger false-positive static analysis findings.

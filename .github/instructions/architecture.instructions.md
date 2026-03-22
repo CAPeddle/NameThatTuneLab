@@ -52,6 +52,41 @@ class FetchUserUseCase @Inject constructor(
         userRepository.getUser(id)
 }
 ```
+### Thin Use-Case Unit Tests
+
+Even use cases that consist of a single delegation call require a dedicated unit test to lock three things:
+
+1. **Delegation** — the use case calls the correct repository method.
+2. **Argument threading** — arguments are forwarded without modification.
+3. **Contract** — the return value or exception from the repository is propagated unchanged.
+
+```kotlin
+// ✓ Thin use-case test — verifies delegation, not the data model
+class ObserveSettingsUseCaseTest {
+    private val repository: SettingsRepository = mockk()
+    private val useCase = ObserveSettingsUseCase(repository)
+
+    @Test
+    fun `invoke delegates to repository observeSettings`() = runTest {
+        val expected = Settings(theme = "dark")
+        every { repository.observeSettings() } returns flowOf(expected)
+
+        val emitted = mutableListOf<Settings>()
+        useCase().collect { emitted += it }
+
+        assertEquals(1, emitted.size)
+        assertEquals(expected, emitted.first())
+    }
+
+    @Test
+    fun `invoke propagates repository exception`() = runTest {
+        coEvery { repository.updateSettings(any()) } throws IOException("disk full")
+        assertThrows<IOException> { useCase(Settings()) }
+    }
+}
+```
+
+Anti-pattern: asserting against a fresh default object instead of the local stub value can hide incorrect stubbing. Prefer assertions tied directly to the emitted stub value.
 
 ### Repository Interfaces
 - Define in `domain/repository/`.
@@ -168,4 +203,6 @@ abstract class DataModule {
 3. **Leaking data models** — agents return Room entities or API DTOs from repository interfaces.
 4. **Missing mappers** — agents reuse data models as domain entities instead of mapping.
 5. **Business logic in ViewModel** — agents put validation/transformation logic in ViewModels instead of use cases.
-6. **Circular dependencies** — agents create imports from domain to data or presentation to data.
+6. **Untested thin use cases** — agents omit unit tests for single-delegation use cases on the grounds that 'there's nothing to test'. Even trivial delegation must be verified (see Thin Use-Case Unit Tests above).
+7. **Thin use-case tests asserting by value instead of by reference** — agents write `assertEquals(DefaultEntity(), emitted.first())` instead of `assertEquals(stubbedValue, emitted.first())`, hiding incorrect stub wiring.
+8. **Circular dependencies** — agents create imports from domain to data or presentation to data.
