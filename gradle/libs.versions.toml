@@ -26,6 +26,9 @@ hiltNavigationCompose = "1.2.0"
 # Room
 room = "2.6.1"
 
+# DataStore
+datastore = "1.1.1"
+
 # KSP
 ksp = "2.0.21-1.0.28"
 
@@ -75,6 +78,9 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# DataStore
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 # Ktor
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }

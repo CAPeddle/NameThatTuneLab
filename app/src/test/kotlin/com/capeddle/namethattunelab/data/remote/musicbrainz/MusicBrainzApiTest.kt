@@ -15,9 +15,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-/**
- * Verifies [MusicBrainzApi] request construction using Ktor's [MockEngine].
- */
 class MusicBrainzApiTest {
 
     private val json = Json {
@@ -27,12 +24,10 @@ class MusicBrainzApiTest {
 
     @Test
     fun `searchRecordings returns parsed recordings`() = runTest {
+        val userAgent = "NameThatTuneLab/2.0 (tests@example.com)"
         val mockEngine = MockEngine { request ->
-            // Verify User-Agent header is present
-            assertTrue(request.headers[HttpHeaders.UserAgent]?.contains("NameThatTuneLab") == true)
-            // Verify query parameter is set
+            assertEquals(userAgent, request.headers[HttpHeaders.UserAgent])
             assertTrue(request.url.parameters["query"]?.contains(ARTIST) == true)
-            // Return a minimal valid response
             respond(
                 content = """
                     {
@@ -67,7 +62,7 @@ class MusicBrainzApiTest {
         }
 
         val api = MusicBrainzApi(httpClient = client)
-        val response = api.searchRecordings(artist = ARTIST, title = "Bohemian Rhapsody")
+        val response = api.searchRecordings(artist = ARTIST, title = "Bohemian Rhapsody", userAgent = userAgent)
 
         assertEquals(1, response.recordings.size)
         val recording = response.recordings.first()
@@ -93,7 +88,11 @@ class MusicBrainzApiTest {
         }
 
         val api = MusicBrainzApi(httpClient = client)
-        val response = api.searchRecordings(artist = "Unknown", title = "Unknown")
+        val response = api.searchRecordings(
+            artist = "Unknown",
+            title = "Unknown",
+            userAgent = "NameThatTuneLab/1.0 (default@example.com)"
+        )
 
         assertTrue(response.recordings.isEmpty())
     }

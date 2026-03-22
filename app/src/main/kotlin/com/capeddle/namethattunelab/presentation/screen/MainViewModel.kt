@@ -2,12 +2,15 @@ package com.capeddle.namethattunelab.presentation.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.capeddle.namethattunelab.domain.model.AppSettings
 import com.capeddle.namethattunelab.domain.model.MetadataConfidence
 import com.capeddle.namethattunelab.domain.model.NowPlayingEvent
 import com.capeddle.namethattunelab.domain.model.TrackMetadata
 import com.capeddle.namethattunelab.domain.usecase.AnnounceTrackUseCase
+import com.capeddle.namethattunelab.domain.usecase.ObserveAppSettingsUseCase
 import com.capeddle.namethattunelab.domain.usecase.ObserveNowPlayingUseCase
 import com.capeddle.namethattunelab.domain.usecase.ResolveMetadataUseCase
+import com.capeddle.namethattunelab.domain.usecase.UpdateAppSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +30,9 @@ data class MainUiState(
     val currentTrack: TrackMetadata? = null,
     val recentTracks: List<TrackMetadata> = emptyList(),
     val isListening: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val musicBrainzUserAgentInput: String = AppSettings.DEFAULT_MUSIC_BRAINZ_USER_AGENT,
+    val voiceOverDelayMsInput: String = AppSettings.DEFAULT_VOICE_OVER_DELAY_MS.toString()
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,7 +43,9 @@ data class MainUiState(
 class MainViewModel @Inject constructor(
     private val observeNowPlaying: ObserveNowPlayingUseCase,
     private val resolveMetadata: ResolveMetadataUseCase,
-    private val announceTrack: AnnounceTrackUseCase
+    private val announceTrack: AnnounceTrackUseCase,
+    private val observeAppSettings: ObserveAppSettingsUseCase,
+    private val updateAppSettings: UpdateAppSettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -46,6 +53,23 @@ class MainViewModel @Inject constructor(
 
     init {
         startListening()
+        observeSettings()
+    }
+
+    private fun observeSettings() {
+        observeAppSettings()
+            .onEach { settings ->
+                _uiState.update {
+                    it.copy(
+                        musicBrainzUserAgentInput = settings.musicBrainzUserAgent,
+                        voiceOverDelayMsInput = settings.voiceOverDelayMs.toString()
+                    )
+                }
+            }
+            .catch { throwable ->
+                _uiState.update { it.copy(errorMessage = throwable.message) }
+            }
+            .launchIn(viewModelScope)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -65,7 +89,6 @@ class MainViewModel @Inject constructor(
 
     private fun handleNowPlayingEvent(event: NowPlayingEvent) {
         viewModelScope.launch {
-            // Show placeholder while metadata resolves
             val placeholder = TrackMetadata(
                 title = event.title,
                 artist = event.artist,
@@ -75,20 +98,17 @@ class MainViewModel @Inject constructor(
             )
             _uiState.update { it.copy(currentTrack = placeholder, errorMessage = null) }
 
-            // Resolve enriched metadata
             resolveMetadata(event)
                 .onSuccess { metadata ->
                     _uiState.update { state ->
-                        val updated = state.copy(
+                        state.copy(
                             currentTrack = metadata,
                             recentTracks = buildRecentList(metadata, state.recentTracks)
                         )
-                        updated
                     }
                     announceTrack(metadata)
                 }
                 .onFailure { err ->
-                    // Fallback: keep the placeholder visible and add it to history
                     _uiState.update { state ->
                         state.copy(
                             recentTracks = buildRecentList(placeholder, state.recentTracks),
@@ -103,6 +123,32 @@ class MainViewModel @Inject constructor(
     // ─────────────────────────────────────────────────────────────────────────
     // User actions
     // ─────────────────────────────────────────────────────────────────────────
+
+    fun onMusicBrainzUserAgentChanged(value: String) {
+        _uiState.update { it.copy(musicBrainzUserAgentInput = value) }
+    }
+
+    fun onVoiceOverDelayChanged(value: String) {
+        val filtered = value.filter { it.isDigit() }
+        _uiState.update { it.copy(voiceOverDelayMsInput = filtered) }
+    }
+
+    fun saveSettings() {
+        viewModelScope.launch {
+            val delayMs = uiState.value.voiceOverDelayMsInput.toLongOrNull()
+            if (delayMs == null) {
+                _uiState.update { it.copy(errorMessage = "Delay must be a whole number in milliseconds") }
+                return@launch
+            }
+
+            updateAppSettings(
+                AppSettings(
+                    musicBrainzUserAgent = uiState.value.musicBrainzUserAgentInput,
+                    voiceOverDelayMs = delayMs
+                )
+            )
+        }
+    }
 
     fun dismissError() {
         _uiState.update { it.copy(errorMessage = null) }

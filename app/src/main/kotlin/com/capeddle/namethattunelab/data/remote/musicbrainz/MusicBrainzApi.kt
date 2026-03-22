@@ -16,8 +16,7 @@ import io.ktor.client.request.parameter
  */
 class MusicBrainzApi(
     private val httpClient: HttpClient,
-    private val baseUrl: String = "https://musicbrainz.org",
-    private val userAgent: String = "NameThatTuneLab/1.0 (chrisapeddle@gmail.com)"
+    private val baseUrl: String = "https://musicbrainz.org"
 ) {
     /**
      * Searches for recordings matching [artist] + [title].
@@ -29,7 +28,13 @@ class MusicBrainzApi(
      * @throws io.ktor.client.plugins.ServerResponseException on 5xx responses.
      * @throws kotlinx.io.IOException on network failures.
      */
-    suspend fun searchRecordings(artist: String, title: String, limit: Int = 5): MusicBrainzRecordingSearchResponse {
+    @Suppress("LongParameterList")
+    suspend fun searchRecordings(
+        artist: String,
+        title: String,
+        userAgent: String,
+        limit: Int = 5
+    ): MusicBrainzRecordingSearchResponse {
         val query = buildLucene(artist, title)
         return httpClient.get("$baseUrl/ws/2/recording") {
             headers { append("User-Agent", userAgent) }

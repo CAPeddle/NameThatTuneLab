@@ -16,4 +16,8 @@
     <string name="notification_channel_name">Now Playing Pipeline</string>
     <string name="notification_title">Listening for music…</string>
     <string name="notification_text">NameThatTuneLab is running</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_musicbrainz_user_agent_label">MusicBrainz User-Agent</string>
+    <string name="settings_voice_over_delay_ms_label">Voice-over Delay (ms)</string>
+    <string name="settings_save_button">Save Settings</string>
 </resources>

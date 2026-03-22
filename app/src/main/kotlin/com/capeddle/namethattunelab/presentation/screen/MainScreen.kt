@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -32,95 +34,26 @@ import com.capeddle.namethattunelab.presentation.component.RecentTracksList
 import com.capeddle.namethattunelab.presentation.component.TrackCard
 import com.capeddle.namethattunelab.presentation.theme.NtlTheme
 
-/**
- * Root screen for NameThatTuneLab.
- *
- * Layout:
- * - TopAppBar with app name
- * - [PermissionStatusBar] — listener permission indicator
- * - Currently playing [TrackCard] (or placeholder)
- * - "Recent Tracks" section header
- * - [RecentTracksList] — scrollable history
- *
- * Error messages from the ViewModel are displayed as Snackbars.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Show errors as dismissible snackbars
-    LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short
-            )
-            viewModel.dismissError()
-        }
-    }
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(title = { Text(text = stringResource(R.string.app_name)) })
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            PermissionStatusBar(isGranted = uiState.isListening)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Current track card
-            uiState.currentTrack?.let { track ->
-                TrackCard(
-                    metadata = track,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            } ?: Text(
-                text = stringResource(R.string.no_track_playing),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Recent tracks header
-            Text(
-                text = stringResource(R.string.recent_tracks),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            RecentTracksList(
-                tracks = uiState.recentTracks,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
+    MainScreenContent(
+        uiState = uiState,
+        onDismissError = viewModel::dismissError,
+        onMusicBrainzUserAgentChanged = viewModel::onMusicBrainzUserAgentChanged,
+        onVoiceOverDelayChanged = viewModel::onVoiceOverDelayChanged,
+        onSaveSettings = viewModel::saveSettings,
+        modifier = modifier
+    )
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Previews
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 @Suppress("UnusedPrivateMember", "MagicNumber")
 private fun PreviewMainScreenDefault() {
     NtlTheme {
-        // Stateless preview that wires state directly — no ViewModel needed
         MainScreenContent(
             uiState = MainUiState(
                 currentTrack = TrackMetadata(
@@ -134,19 +67,28 @@ private fun PreviewMainScreenDefault() {
                     TrackMetadata("Hotel California", "Eagles", null, 1977, MetadataConfidence.HIGH),
                     TrackMetadata("Imagine", "John Lennon", "Imagine", 1971, MetadataConfidence.MEDIUM)
                 ),
-                isListening = true
+                isListening = true,
+                musicBrainzUserAgentInput = "NameThatTuneLab/1.0 (you@example.com)",
+                voiceOverDelayMsInput = "1000"
             ),
-            onDismissError = {}
+            onDismissError = {},
+            onMusicBrainzUserAgentChanged = {},
+            onVoiceOverDelayChanged = {},
+            onSaveSettings = {}
         )
     }
 }
 
-/**
- * Stateless content composable extracted for preview and future testability.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MainScreenContent(uiState: MainUiState, onDismissError: () -> Unit, modifier: Modifier = Modifier) {
+internal fun MainScreenContent(
+    uiState: MainUiState,
+    onDismissError: () -> Unit,
+    onMusicBrainzUserAgentChanged: (String) -> Unit,
+    onVoiceOverDelayChanged: (String) -> Unit,
+    onSaveSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.errorMessage) {
@@ -172,19 +114,7 @@ internal fun MainScreenContent(uiState: MainUiState, onDismissError: () -> Unit,
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            uiState.currentTrack?.let { track ->
-                TrackCard(
-                    metadata = track,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            } ?: Text(
-                text = stringResource(R.string.no_track_playing),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            CurrentTrackSection(uiState = uiState)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -198,8 +128,86 @@ internal fun MainScreenContent(uiState: MainUiState, onDismissError: () -> Unit,
 
             RecentTracksList(
                 tracks = uiState.recentTracks,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             )
+
+            SettingsPanel(
+                uiState = uiState,
+                onMusicBrainzUserAgentChanged = onMusicBrainzUserAgentChanged,
+                onVoiceOverDelayChanged = onVoiceOverDelayChanged,
+                onSaveSettings = onSaveSettings
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun CurrentTrackSection(uiState: MainUiState, modifier: Modifier = Modifier) {
+    uiState.currentTrack?.let { track ->
+        TrackCard(
+            metadata = track,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+    } ?: Text(
+        text = stringResource(R.string.no_track_playing),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(horizontal = 16.dp)
+    )
+}
+
+@Composable
+private fun SettingsPanel(
+    uiState: MainUiState,
+    onMusicBrainzUserAgentChanged: (String) -> Unit,
+    onVoiceOverDelayChanged: (String) -> Unit,
+    onSaveSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.settings_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.musicBrainzUserAgentInput,
+            onValueChange = onMusicBrainzUserAgentChanged,
+            label = { Text(text = stringResource(R.string.settings_musicbrainz_user_agent_label)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.voiceOverDelayMsInput,
+            onValueChange = onVoiceOverDelayChanged,
+            label = { Text(text = stringResource(R.string.settings_voice_over_delay_ms_label)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onSaveSettings,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(text = stringResource(R.string.settings_save_button))
         }
     }
 }
