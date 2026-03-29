@@ -22,10 +22,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // JUnit 5 support for unit tests
-        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"
+        testInstrumentationRunner = "com.capeddle.namethattunelab.HiltTestRunner"
     }
 
     buildTypes {
@@ -136,4 +133,8 @@ dependencies {
     // Instrumented Tests
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.compose.ui.test.manifest)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
 }

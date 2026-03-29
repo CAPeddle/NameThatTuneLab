@@ -15,8 +15,11 @@ import kotlinx.coroutines.flow.Flow
 @Singleton
 class NowPlayingRepositoryImpl @Inject constructor(
     private val monitor: MediaSessionMonitor,
-    private val debouncer: TrackChangeDebouncer
+    private val debouncer: TrackChangeDebouncer,
+    private val notificationAccessMonitor: NotificationAccessMonitor
 ) : NowPlayingRepository {
 
     override fun observeNowPlaying(): Flow<NowPlayingEvent> = debouncer.debounce(monitor.events)
+
+    override fun observeNotificationAccess(): Flow<Boolean> = notificationAccessMonitor.observe()
 }

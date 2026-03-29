@@ -14,4 +14,9 @@ interface NowPlayingRepository {
      * The flow is debounced and deduplicated — consumers will not see rapid duplicate events.
      */
     fun observeNowPlaying(): Flow<NowPlayingEvent>
+
+    /**
+     * Returns whether notification-listener access is currently granted for this app.
+     */
+    fun observeNotificationAccess(): Flow<Boolean>
 }

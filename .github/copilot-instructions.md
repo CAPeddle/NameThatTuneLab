@@ -87,6 +87,15 @@ Common local quality gate:
 | Testing | TDD — unit/instrumented verification | `@testing` |
 | Code Reviewer | Review — idioms, patterns, compound learning | `@code-reviewer` |
 
+## Orchestration Completion Flow
+
+For Overlord-orchestrated work, completion requires this sequence:
+1. Delegate implementation
+2. Delegate testing and resolve failures
+3. Delegate code review and resolve blockers
+4. Perform git check-in and push
+
+Do not treat a workflow as complete until commit and push succeed (or a push blocker is explicitly documented).
 ## CI Workflow
 
 The `android-ci.yml` workflow runs on push/PR to `main` and `develop`:
@@ -125,3 +134,4 @@ Quick commands:
 adb devices
 ./gradlew :app:installDebug
 ```
+

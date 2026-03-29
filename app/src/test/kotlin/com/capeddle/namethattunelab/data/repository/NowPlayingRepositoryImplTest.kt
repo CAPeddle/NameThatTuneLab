@@ -15,8 +15,9 @@ class NowPlayingRepositoryImplTest {
 
     private val monitor: MediaSessionMonitor = mockk()
     private val debouncer: TrackChangeDebouncer = mockk()
+    private val notificationAccessMonitor: NotificationAccessMonitor = mockk()
 
-    private val repository = NowPlayingRepositoryImpl(monitor, debouncer)
+    private val repository = NowPlayingRepositoryImpl(monitor, debouncer, notificationAccessMonitor)
 
     @Test
     fun `observeNowPlaying delegates monitor events through debouncer`() {
@@ -30,6 +31,17 @@ class NowPlayingRepositoryImplTest {
 
         assertSame(expectedFlow, result)
         verify(exactly = 1) { debouncer.debounce(monitorEvents) }
+    }
+
+    @Test
+    fun `observeNotificationAccess delegates to notification access monitor`() {
+        val expectedFlow = flowOf(true)
+        every { notificationAccessMonitor.observe() } returns expectedFlow
+
+        val result = repository.observeNotificationAccess()
+
+        assertSame(expectedFlow, result)
+        verify(exactly = 1) { notificationAccessMonitor.observe() }
     }
 
     companion object {

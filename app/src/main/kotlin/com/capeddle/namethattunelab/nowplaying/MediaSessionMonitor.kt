@@ -11,7 +11,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -81,7 +80,6 @@ class MediaSessionMonitor @Inject constructor(
     /** Detaches all registered controllers. Call when the listener service disconnects. */
     fun detachAll() {
         controllers.keys.toList().forEach { detach(it) }
-        scope.cancel()
     }
 
     /**

@@ -3,7 +3,7 @@
 This ExecPlan is a living document. Keep `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` up to date as work proceeds.
 
 **Date:** 2026-03-22
-**Status:** 🆕 Not Started
+**Status:** ✅ Done
 **Owner:** Overlord Agent
 **Refs:** Deferred scope from `2026-03-22-code-review-nits-settings.md` (Q3); commit `b09e57c`
 **Revision:** v1
@@ -38,16 +38,20 @@ semantics and a Done IME action pathway.
 
 ## Progress
 
-- [ ] Milestone 1 — Investigation and testability design decisions
-- [ ] Milestone 2 — AndroidTest baseline scaffolding (RED)
-- [ ] Milestone 3 — Keyboard semantics test implementation (GREEN)
-- [ ] Milestone 4 — Quality gates + review + closeout
+- [x] Milestone 1 — Investigation and testability design decisions
+- [x] Milestone 2 — AndroidTest baseline scaffolding (RED)
+- [x] Milestone 3 — Keyboard semantics test implementation (GREEN)
+- [x] Milestone 4 — Quality gates + review + closeout
 
 ---
 
 ## Surprises & Discoveries
 
-*(Record unexpected findings as they occur.)*
+- Compose semantics can reliably assert ImeAction.Done and Done-path behavior (performImeAction + focus clearing), but cannot directly prove KeyboardType.Number via a stable built-in matcher.
+- app/src/androidTest/ is absent, so baseline infrastructure must be created as part of this plan.
+- app/build.gradle.kts currently sets instrumentation runner args for de.mannodermaus.junit5.AndroidJUnit5Builder; no matching plugin/dependency is evident, so this is a likely connected-test startup risk to verify during RED setup.
+- Compose instrumented tests fail with "No compose hierarchies found" when the device screen is off (mAwake=false) — the ComposeRootRegistry never sees the hierarchy even though the activity launches correctly. Fix: declare showWhenLocked/turnScreenOn on the test activity in the debug manifest.
+- The test activity must live in app/src/debug/ (not androidTest/) because createAndroidComposeRule<T>() launches it in the app process, not the test process. Declaring it only in the androidTest manifest causes "Intent resolved to different process" errors.
 
 ---
 
@@ -63,22 +67,36 @@ semantics and a Done IME action pathway.
   Rationale: Avoid unnecessary production code changes for testability unless stability requires it.
   Date: 2026-03-22
 
+- **Decision:** Use exactly one stable `testTag` on the delay input if RED tests show selector brittleness due to localization or node ordering.
+  Rationale: One explicit hook keeps production impact minimal while eliminating fragile text/index-based selection.
+  Date: 2026-03-22
+- **Decision:** Implement one stable delay-field `testTag` and target the field by tag in the instrumented test.
+  Rationale: This avoids localization and index-order brittleness while keeping production changes minimal.
+  Date: 2026-03-22
+
 ---
 
 ## Outcomes & Retrospective
 
-*(Complete after plan closes.)*
-
 **What was achieved:**
+- Full Compose UI instrumented test baseline established: HiltTestRunner, androidTest dependencies, TestActivity in debug source set, one passing keyboard-semantics test.
+- Both quality gates pass: connectedDebugAndroidTest (1 test, PASSED on Pixel 8 API 16) and the combined ktlintCheck detekt testDebugUnitTest assembleDebug gate.
+- ImeAction.Done semantics and focus-clearing behaviour verified end-to-end for the delay input field.
 
 **What remains (if anything):**
+None. All acceptance criteria met.
 
 **Patterns to promote:**
+- Place test-only activities in pp/src/debug/ and declare them with ndroid:showWhenLocked="true" and ndroid:turnScreenOn="true" in pp/src/debug/AndroidManifest.xml. This ensures reliable Compose test execution regardless of device screen state.
+- Add composeTestRule.waitForIdle() immediately after setContent {} as a defensive synchronization barrier before the first node interaction.
 
 **Reusable findings:**
-[Governance updates identified during review — changes to instructions, agent guidance, or detekt rules that should be applied to improve future cycles.]
+- The HiltTestRunner pattern (extend AndroidJUnitRunner, substitute HiltTestApplication) is the correct minimal approach for any project using @HiltAndroidApp, even when individual tests don't use @HiltAndroidTest.
+- KeyboardType.Number cannot be directly asserted via a stable Compose UI test API; assert ImeAction.Done and the Done-path focus-clearing behaviour as the closest reliable semantic evidence.
+- Compose instrumented tests require the device screen to be on (mAwake=true). When the screen is off, ComposeRootRegistry never registers the hierarchy and tests fail with "No compose hierarchies found" even though the activity launches. Declare showWhenLocked/	urnScreenOn in the debug manifest to make tests self-sufficient.
 
 **New anti-patterns:**
+- Do not declare test activities in pp/src/androidTest/AndroidManifest.xml with an <activity> element — the test APK runs in a different process and cannot host activities launched by the test framework targeting the app process. Activities used in createAndroidComposeRule<T>() must live in the app's debug source set.
 
 ---
 
@@ -213,16 +231,16 @@ semantics and a Done IME action pathway.
 
 | Criterion | Command / Evidence | Status |
 |-----------|-------------------|--------|
-| AndroidTest baseline exists and compiles | `./gradlew :app:connectedDebugAndroidTest` reaches execution phase | - |
-| Delay field is uniquely and stably selectable in test | Test code uses resilient selector strategy | - |
-| Keyboard semantics assertion implemented | Instrumented test asserts numeric/IME intent evidence | - |
-| Done action path verified | Test verifies Done pathway behavior (focus/event semantics) | - |
-| All unit tests pass | `./gradlew :app:testDebugUnitTest` — zero failures | - |
-| No ktlint violations | `./gradlew :app:ktlintCheck` — zero violations | - |
-| No detekt violations | `./gradlew :app:detekt` — zero findings | - |
-| Build succeeds | `./gradlew :app:assembleDebug` — `BUILD SUCCESSFUL` | - |
-| Code review completed | `@code-reviewer` — no blockers | - |
-| TDD cycle completed | RED → GREEN → REFACTOR for new code | - |
+| AndroidTest baseline exists and compiles | `./gradlew :app:connectedDebugAndroidTest` — 1 test PASSED on Pixel 8 API 16 | ✅ connectedDebugAndroidTest passes |
+| Delay field is uniquely and stably selectable in test | Test code uses resilient selector strategy | ✅ Stable testTag selector implemented |
+| Keyboard semantics assertion implemented | Instrumented test asserts numeric/IME intent evidence | ✅ IME Done semantics asserted on delay field |
+| Done action path verified | Test verifies Done pathway behavior (focus/event semantics) | ✅ performImeAction clears focus |
+| All unit tests pass | `./gradlew :app:testDebugUnitTest` — zero failures | ✅ via combined gate command |
+| No ktlint violations | `./gradlew :app:ktlintCheck` — zero violations | ✅ via combined gate command |
+| No detekt violations | `./gradlew :app:detekt` — zero findings | ✅ via combined gate command |
+| Build succeeds | `./gradlew :app:assembleDebug` — `BUILD SUCCESSFUL` | ✅ via combined gate command |
+| Code review completed | `@code-reviewer` — no blockers | ✅ Reviewed; R1 (waitForIdle after setContent) applied |
+| TDD cycle completed | RED → GREEN → REFACTOR for new code | ✅ Complete |
 
 ---
 

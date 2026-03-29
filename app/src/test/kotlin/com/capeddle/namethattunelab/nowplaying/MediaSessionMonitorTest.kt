@@ -1,12 +1,19 @@
 package com.capeddle.namethattunelab.nowplaying
 
+import android.media.MediaMetadata
 import android.media.session.MediaController
+import android.media.session.PlaybackState
+import app.cash.turbine.test
 import com.capeddle.namethattunelab.util.PipelineLogger
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -68,6 +75,41 @@ class MediaSessionMonitorTest {
 
         verify(exactly = 1) { c1.unregisterCallback(any()) }
         verify(exactly = 1) { c2.unregisterCallback(any()) }
+    }
+
+    @Test
+    fun `emits events after detachAll and reattach`() = runTest {
+        val reconnectMonitor = MediaSessionMonitor(logger, StandardTestDispatcher(testScheduler))
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_SPOTIFY
+
+        val metadata: MediaMetadata = mockk(relaxed = true)
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns "Track"
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns "Artist"
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) } returns null
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM) } returns "Album"
+        every { controller.metadata } returns metadata
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PLAYING
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        reconnectMonitor.attach(controller, PACKAGE_SPOTIFY)
+        reconnectMonitor.detachAll()
+        reconnectMonitor.attach(controller, PACKAGE_SPOTIFY)
+
+        reconnectMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            val event = awaitItem()
+            assertEquals("Track", event.title)
+            assertEquals("Artist", event.artist)
+            assertEquals(PACKAGE_SPOTIFY, event.sourceApp)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     companion object {

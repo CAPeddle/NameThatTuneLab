@@ -8,6 +8,7 @@ import com.capeddle.namethattunelab.domain.model.NowPlayingEvent
 import com.capeddle.namethattunelab.domain.model.TrackMetadata
 import com.capeddle.namethattunelab.domain.usecase.AnnounceTrackUseCase
 import com.capeddle.namethattunelab.domain.usecase.ObserveAppSettingsUseCase
+import com.capeddle.namethattunelab.domain.usecase.ObserveNotificationAccessUseCase
 import com.capeddle.namethattunelab.domain.usecase.ObserveNowPlayingUseCase
 import com.capeddle.namethattunelab.domain.usecase.ResolveMetadataUseCase
 import com.capeddle.namethattunelab.domain.usecase.UpdateAppSettingsUseCase
@@ -31,6 +32,7 @@ data class MainUiState(
     val currentTrack: TrackMetadata? = null,
     val recentTracks: List<TrackMetadata> = emptyList(),
     val isListening: Boolean = false,
+    val isNotificationAccessGranted: Boolean = false,
     val errorMessage: String? = null,
     val musicBrainzUserAgentInput: String = AppSettings.DEFAULT_MUSIC_BRAINZ_USER_AGENT,
     val voiceOverDelayMsInput: String = AppSettings.DEFAULT_VOICE_OVER_DELAY_MS.toString()
@@ -43,6 +45,7 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val observeNowPlaying: ObserveNowPlayingUseCase,
+    private val observeNotificationAccess: ObserveNotificationAccessUseCase,
     private val resolveMetadata: ResolveMetadataUseCase,
     private val announceTrack: AnnounceTrackUseCase,
     private val observeAppSettings: ObserveAppSettingsUseCase,
@@ -53,8 +56,25 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     init {
+        observeNotificationAccessState()
         startListening()
         observeSettings()
+    }
+
+    private fun observeNotificationAccessState() {
+        observeNotificationAccess()
+            .onEach { isGranted ->
+                _uiState.update {
+                    it.copy(
+                        isNotificationAccessGranted = isGranted,
+                        isListening = isGranted
+                    )
+                }
+            }
+            .catch { throwable ->
+                _uiState.update { it.copy(errorMessage = throwable.message, isNotificationAccessGranted = false) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeSettings() {
@@ -78,7 +98,7 @@ class MainViewModel @Inject constructor(
     // -────────────────────────────────────────────────────────────────────────
 
     private fun startListening() {
-        _uiState.update { it.copy(isListening = true) }
+        _uiState.update { it.copy(isListening = it.isNotificationAccessGranted) }
 
         observeNowPlaying()
             .onEach { event -> handleNowPlayingEvent(event) }

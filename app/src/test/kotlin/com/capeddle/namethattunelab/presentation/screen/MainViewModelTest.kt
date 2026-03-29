@@ -6,6 +6,7 @@ import com.capeddle.namethattunelab.domain.model.NowPlayingEvent
 import com.capeddle.namethattunelab.domain.model.TrackMetadata
 import com.capeddle.namethattunelab.domain.usecase.AnnounceTrackUseCase
 import com.capeddle.namethattunelab.domain.usecase.ObserveAppSettingsUseCase
+import com.capeddle.namethattunelab.domain.usecase.ObserveNotificationAccessUseCase
 import com.capeddle.namethattunelab.domain.usecase.ObserveNowPlayingUseCase
 import com.capeddle.namethattunelab.domain.usecase.ResolveMetadataUseCase
 import com.capeddle.namethattunelab.domain.usecase.UpdateAppSettingsUseCase
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -37,6 +39,7 @@ class MainViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val observeNowPlaying: ObserveNowPlayingUseCase = mockk()
+    private val observeNotificationAccess: ObserveNotificationAccessUseCase = mockk()
     private val resolveMetadata: ResolveMetadataUseCase = mockk()
     private val announceTrack: AnnounceTrackUseCase = mockk()
     private val observeAppSettings: ObserveAppSettingsUseCase = mockk()
@@ -49,6 +52,7 @@ class MainViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { observeAppSettings() } returns flowOf(AppSettings())
+        every { observeNotificationAccess() } returns flowOf(true)
         coEvery { updateAppSettings(any()) } returns Unit
     }
 
@@ -59,6 +63,7 @@ class MainViewModelTest {
 
     private fun createViewModel(): MainViewModel = MainViewModel(
         observeNowPlaying,
+        observeNotificationAccess,
         resolveMetadata,
         announceTrack,
         observeAppSettings,
@@ -78,6 +83,52 @@ class MainViewModelTest {
             assertNull(state.currentTrack)
             assertTrue(state.recentTracks.isEmpty())
             assertNull(state.errorMessage)
+        }
+
+        @Test
+        fun `notification access state reports not granted when access flow emits false`() {
+            runTest(testDispatcher) {
+                every { observeNowPlaying() } returns flowOf()
+                every { observeNotificationAccess() } returns flowOf(false)
+
+                val vm = createViewModel()
+                advanceUntilIdle()
+
+                val state = vm.uiState.value
+                assertFalse(state.isNotificationAccessGranted)
+            }
+        }
+
+        @Test
+        fun `listening indicator is false when notification listener permission is disabled`() {
+            runTest(testDispatcher) {
+                every { observeNowPlaying() } returns flowOf()
+                every { observeNotificationAccess() } returns flowOf(false)
+
+                val vm = createViewModel()
+                advanceUntilIdle()
+
+                val state = vm.uiState.value
+                assertFalse(
+                    state.isListening,
+                    "UI should not indicate listening when notification listener permission is disabled."
+                )
+            }
+        }
+
+        @Test
+        fun `notification access transition from false to true enables listening indicator`() {
+            runTest(testDispatcher) {
+                every { observeNowPlaying() } returns flowOf()
+                every { observeNotificationAccess() } returns flowOf(false, true)
+
+                val vm = createViewModel()
+                advanceUntilIdle()
+
+                val state = vm.uiState.value
+                assertTrue(state.isNotificationAccessGranted)
+                assertTrue(state.isListening)
+            }
         }
     }
 

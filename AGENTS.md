@@ -69,6 +69,16 @@ Every agent session ends with an automated quality gate (`agentStop` lifecycle h
 If the gate fails, the agent session is blocked from completing until violations are resolved.
 
 Additional hooks run at `PostToolUse` (auto-format after file edits) and `SessionStart` (context injection).
+## Workflow Completion Rule
+
+For orchestrated implementation flows, completion requires the full gate sequence:
+1. Developer implementation
+2. Testing validation
+3. Code review approval
+4. Git check-in and push
+
+A workflow is not complete until changes are committed and pushed.
+If push is blocked by environment or permissions, document the blocker explicitly and keep the task open.
 
 ## Device Deployment
 
@@ -81,3 +91,5 @@ Use the project deployment instruction and skill for connected-device installs:
 This repository uses `AGENTS.md` for Copilot. For compatibility with other agent runtimes:
 - **Claude Code:** Create `CLAUDE.md` at repo root with equivalent guidance.
 - **Gemini CLI:** Create `GEMINI.md` at repo root with equivalent guidance.
+
+

@@ -1,0 +1,68 @@
+{
+  "sources": {
+    "vscode-agent-skills": {
+      "url": "https://code.visualstudio.com/docs/copilot/customization/agent-skills",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "VS Code 1.102+ docs, 2026-03-09 revision",
+      "key_sections_at_review": ["Skill file structure", "Skill file locations", "Create a skill", "Use a skill"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. SKILL.md frontmatter supports name, description, argument-hint."
+    },
+    "vscode-agents-overview": {
+      "url": "https://code.visualstudio.com/docs/copilot/agents/overview",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "VS Code 1.102+ docs, 2026-03-09 revision",
+      "key_sections_at_review": ["Types of agents", "Hand off a session", "Agent tools"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. Agent types: Local, Background, Cloud, Third-party."
+    },
+    "vscode-custom-agents": {
+      "url": "https://code.visualstudio.com/docs/copilot/customization/custom-agents",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "VS Code 1.102+ docs, 2026-03-09 revision",
+      "key_sections_at_review": ["Custom agent file structure", "Header", "Body", "Handoffs", "Tool list priority"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. Frontmatter fields: name, description, tools, agents, model, handoffs, hooks, user-invocable, disable-model-invocation, target."
+    },
+    "vscode-chat-tools-reference": {
+      "url": "https://code.visualstudio.com/docs/copilot/reference/copilot-vscode-features#_chat-tools",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "VS Code 1.102+ docs, 2026-03-09 revision",
+      "key_sections_at_review": ["Chat tools table"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. Valid tool sets: search, edit, runCommands, runTasks, runNotebooks, browser. Individual tools: readFile, editFiles, runInTerminal, runSubagent, codebase, problems, fetch, usages, etc."
+    },
+    "awesome-copilot": {
+      "url": "https://awesome-copilot.github.com/learning-hub/what-are-agents-skills-instructions/",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "2026-Q1",
+      "key_sections_at_review": ["Agents vs Skills vs Instructions taxonomy"],
+      "github_release_tag": null,
+      "notes": "Initial baseline."
+    },
+    "openai-execplans-cookbook": {
+      "url": "https://developers.openai.com/cookbook/articles/codex_exec_plans",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "2026-Q1",
+      "key_sections_at_review": ["ExecPlan quality model", "Living plan structure"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. Influenced PLANS.md structure."
+    },
+    "cursor-scaling-agents": {
+      "url": "https://cursor.com/blog/scaling-agents",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "Jan 2026 blog post",
+      "key_sections_at_review": ["Planner/worker patterns", "Context management", "Model selection"],
+      "github_release_tag": null,
+      "notes": "Initial baseline. Influenced model selection guidance and context pressure tracking."
+    },
+    "generic-governance-template": {
+      "url": "file://C:/projects/zoom_copilot_config/Generic",
+      "last_reviewed": "2026-03-21",
+      "version_marker": "2026-03-19 baseline",
+      "key_sections_at_review": ["agents/", "skills/", "hooks/", "planning/", "AGENTS.md"],
+      "github_release_tag": null,
+      "notes": "Initial adoption into NameThatTuneLab. Adopted: review-upstream-sources, validate-agent-tools, adopt-template-updates skills. Adopted: context pressure tracking, worker response format, investigation-first ExecPlan rule, agentStop hook key."
+    }
+  }
+}

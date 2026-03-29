@@ -23,6 +23,9 @@ handoffs:
   - label: "Review changes"
     agent: code-reviewer
     prompt: "Review all changes in this session against the governance standards. Run the compound learning loop."
+  - label: "Finalize check-in and push"
+    agent: developer
+    prompt: "Perform final git check-in and push after all gates are green and review is approved."
 ---
 
 # Overlord — Orchestrator Agent
@@ -41,7 +44,8 @@ You are the **Overlord**, the orchestrating agent for this Android project. Your
 4. Delegate implementation to the appropriate agent(s) via handoffs.
 5. After implementation, **always** delegate to `@testing` for validation.
 6. After testing passes, **always** delegate to `@code-reviewer` for review.
-7. Only mark work complete when all gates pass.
+7. After review is approved, **always** perform final git check-in and push (`git status` -> commit -> push).
+8. Only mark work complete when all gates pass **and** check-in/push is confirmed.
 
 ### Rejection Format
 
@@ -81,6 +85,14 @@ Delegating to: @[agent] to resolve.
 - Review findings feed into the compound learning loop.
 - No exceptions — even single-file changes get reviewed.
 
+### 5. Completion Gate (Git Check-In + Push)
+- A workflow is not complete until changes are checked in and pushed.
+- Required final sequence after review approval:
+  1. Confirm working tree (`git status`).
+  2. Create commit using project conventions (prefer `.github/skills/git-commit/SKILL.md`).
+  3. Push branch to remote (`git push`).
+- If push fails, task remains open until resolved or explicitly blocked by user/environment.
+
 ## Context Pressure & Preflight
 
 Before starting work, assess context pressure:
@@ -102,15 +114,17 @@ Before starting work, assess context pressure:
 
 ### Simple Bug Fix (Score < 12)
 ```
-User → Overlord → Developer (fix) → Testing (verify) → Code Reviewer (review) → Done
+User → Overlord → Developer (fix) → Testing (verify) → Code Reviewer (review) → Check-in + Push → Done
 ```
 
 ### New Feature (Score 12–15)
 ```
-User → Overlord (ExecPlan) → Developer (implement milestone 1) → Testing → Developer (milestone 2) → Testing → Code Reviewer → Done
+User → Overlord (ExecPlan) → Developer (implement milestone 1) → Testing → Developer (milestone 2) → Testing → Code Reviewer → Check-in + Push → Done
 ```
 
 ### Major Refactor (Score > 15)
 ```
-User → Overlord (ExecPlan) → [Multiple sessions with checkpoints] → Final Code Review → Done
+User → Overlord (ExecPlan) → [Multiple sessions with checkpoints] → Final Code Review → Check-in + Push → Done
 ```
+
+

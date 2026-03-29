@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -115,7 +116,7 @@ internal fun MainScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            PermissionStatusBar(isGranted = uiState.isListening)
+            PermissionStatusBar(isGranted = uiState.isNotificationAccessGranted)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -210,6 +211,7 @@ private fun SettingsPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .testTag("settings_voice_over_delay_input")
         )
 
         Spacer(modifier = Modifier.height(12.dp))

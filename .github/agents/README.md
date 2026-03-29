@@ -40,6 +40,9 @@ Overlord (plan & delegate)
   │         │                         Code Reviewer (re-review)
   │         │
   │         ▼ APPROVED
+  │    Developer (check-in + push)
+  │         │
+  │         ▼
   │    Compound Loop (update governance)
   │
   ├──► Debugger (investigate)
@@ -61,6 +64,7 @@ Done
 | Overlord | Developer | Implementation needed | "Implement this plan" |
 | Overlord | Testing | Validation needed | "Validate implementation" |
 | Overlord | Code Reviewer | Review needed | "Review changes" |
+| Overlord | Developer | Review approved; finalize delivery | "Finalize check-in and push" |
 | Developer | Testing | Implementation complete | "Run tests for my changes" |
 | Developer | Code Reviewer | Tests pass | "Review my changes" |
 | Debugger | Developer | Fix identified | "Apply this fix" |
@@ -113,3 +117,5 @@ Review → Findings → Learnings → Governance Update → Better Reviews → .
 | Testing, TDD | Claude Sonnet | Pattern-based test generation |
 
 Use the best model for the role, not one universal model. Planner agents (Overlord) benefit most from the highest-quality models.
+
+
