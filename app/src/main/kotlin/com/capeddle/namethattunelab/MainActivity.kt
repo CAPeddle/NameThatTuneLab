@@ -16,7 +16,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NtlTheme {
-                MainScreen()
+                MainScreen(
+                    onOpenNotificationAccessSettings = {
+                        NotificationAccessSettingsLauncher.launch(
+                            context = this,
+                            packageName = packageName
+                        )
+                    }
+                )
             }
         }
     }

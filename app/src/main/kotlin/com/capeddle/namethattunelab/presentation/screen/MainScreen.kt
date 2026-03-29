@@ -42,24 +42,48 @@ import com.capeddle.namethattunelab.presentation.theme.NtlTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(
+    onOpenNotificationAccessSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    MainScreenContent(
-        uiState = uiState,
+    val callbacks = MainScreenCallbacks(
+        onOpenNotificationAccessSettings = onOpenNotificationAccessSettings,
         onDismissError = viewModel::dismissError,
         onMusicBrainzUserAgentChanged = viewModel::onMusicBrainzUserAgentChanged,
         onVoiceOverDelayChanged = viewModel::onVoiceOverDelayChanged,
-        onSaveSettings = viewModel::saveSettings,
+        onSaveSettings = viewModel::saveSettings
+    )
+
+    MainScreenContent(
+        uiState = uiState,
+        callbacks = callbacks,
         modifier = modifier
     )
 }
+
+internal data class MainScreenCallbacks(
+    val onOpenNotificationAccessSettings: () -> Unit,
+    val onDismissError: () -> Unit,
+    val onMusicBrainzUserAgentChanged: (String) -> Unit,
+    val onVoiceOverDelayChanged: (String) -> Unit,
+    val onSaveSettings: () -> Unit
+)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 @Suppress("UnusedPrivateMember", "MagicNumber")
 private fun PreviewMainScreenDefault() {
     NtlTheme {
+        val callbacks = MainScreenCallbacks(
+            onOpenNotificationAccessSettings = {},
+            onDismissError = {},
+            onMusicBrainzUserAgentChanged = {},
+            onVoiceOverDelayChanged = {},
+            onSaveSettings = {}
+        )
+
         MainScreenContent(
             uiState = MainUiState(
                 currentTrack = TrackMetadata(
@@ -77,30 +101,20 @@ private fun PreviewMainScreenDefault() {
                 musicBrainzUserAgentInput = "NameThatTuneLab/1.0 (you@example.com)",
                 voiceOverDelayMsInput = "1000"
             ),
-            onDismissError = {},
-            onMusicBrainzUserAgentChanged = {},
-            onVoiceOverDelayChanged = {},
-            onSaveSettings = {}
+            callbacks = callbacks
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MainScreenContent(
-    uiState: MainUiState,
-    onDismissError: () -> Unit,
-    onMusicBrainzUserAgentChanged: (String) -> Unit,
-    onVoiceOverDelayChanged: (String) -> Unit,
-    onSaveSettings: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+internal fun MainScreenContent(uiState: MainUiState, callbacks: MainScreenCallbacks, modifier: Modifier = Modifier) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
             snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
-            onDismissError()
+            callbacks.onDismissError()
         }
     }
 
@@ -116,7 +130,10 @@ internal fun MainScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            PermissionStatusBar(isGranted = uiState.isNotificationAccessGranted)
+            PermissionStatusBar(
+                isGranted = uiState.isNotificationAccessGranted,
+                onOpenSettings = callbacks.onOpenNotificationAccessSettings
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -141,9 +158,9 @@ internal fun MainScreenContent(
 
             SettingsPanel(
                 uiState = uiState,
-                onMusicBrainzUserAgentChanged = onMusicBrainzUserAgentChanged,
-                onVoiceOverDelayChanged = onVoiceOverDelayChanged,
-                onSaveSettings = onSaveSettings
+                onMusicBrainzUserAgentChanged = callbacks.onMusicBrainzUserAgentChanged,
+                onVoiceOverDelayChanged = callbacks.onVoiceOverDelayChanged,
+                onSaveSettings = callbacks.onSaveSettings
             )
 
             Spacer(modifier = Modifier.height(16.dp))
