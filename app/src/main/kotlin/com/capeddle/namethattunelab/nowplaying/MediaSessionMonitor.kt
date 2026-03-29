@@ -29,7 +29,8 @@ import kotlinx.coroutines.launch
 @Singleton
 class MediaSessionMonitor @Inject constructor(
     private val logger: PipelineLogger,
-    @Named("io") private val ioDispatcher: CoroutineDispatcher
+    @Named("io") private val ioDispatcher: CoroutineDispatcher,
+    private val allowlistPolicy: MediaPackageAllowlistPolicy
 ) {
     private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
 
@@ -47,16 +48,19 @@ class MediaSessionMonitor @Inject constructor(
 
         val callback = object : MediaController.Callback() {
             override fun onMetadataChanged(metadata: MediaMetadata?) {
-                val state = controller.playbackState?.state
-                if (state == PlaybackState.STATE_PLAYING && metadata != null) {
-                    emitEvent(metadata, packageName)
-                }
+                evaluateCandidate(
+                    packageName = packageName,
+                    playbackState = controller.playbackState?.state,
+                    metadata = metadata
+                )
             }
 
             override fun onPlaybackStateChanged(state: PlaybackState?) {
-                if (state?.state == PlaybackState.STATE_PLAYING) {
-                    controller.metadata?.let { emitEvent(it, packageName) }
-                }
+                evaluateCandidate(
+                    packageName = packageName,
+                    playbackState = state?.state,
+                    metadata = controller.metadata
+                )
             }
 
             override fun onSessionDestroyed() {
@@ -92,13 +96,56 @@ class MediaSessionMonitor @Inject constructor(
             .forEach { detach(it) }
     }
 
+    private fun evaluateCandidate(packageName: String, playbackState: Int?, metadata: MediaMetadata?) {
+        if (!allowlistPolicy.isAllowed(packageName)) {
+            logger.logIgnoredCandidate(
+                reason = PipelineLogger.IgnoredCandidateReason.PACKAGE_NOT_ALLOWLISTED,
+                packageName = packageName
+            )
+            return
+        }
+
+        if (playbackState != PlaybackState.STATE_PLAYING) {
+            logger.logIgnoredCandidate(
+                reason = PipelineLogger.IgnoredCandidateReason.PLAYBACK_NOT_PLAYING,
+                packageName = packageName,
+                details = mapOf("state" to playbackState.toString())
+            )
+            return
+        }
+
+        if (metadata == null) {
+            logger.logIgnoredCandidate(
+                reason = PipelineLogger.IgnoredCandidateReason.METADATA_MISSING_REQUIRED_FIELDS,
+                packageName = packageName,
+                details = mapOf("missing" to "title,artist")
+            )
+            return
+        }
+
+        emitEvent(metadata = metadata, sourceApp = packageName)
+    }
+
     private fun emitEvent(metadata: MediaMetadata, sourceApp: String) {
         val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)?.takeIf { it.isNotBlank() }
-            ?: return
-        val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
-            ?: metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
-            ?: return
-        val album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)
+        val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)?.takeIf { it.isNotBlank() }
+            ?: metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)?.takeIf { it.isNotBlank() }
+
+        if (title == null || artist == null) {
+            val missingFields = buildList {
+                if (title == null) add("title")
+                if (artist == null) add("artist")
+            }.joinToString(",")
+
+            logger.logIgnoredCandidate(
+                reason = PipelineLogger.IgnoredCandidateReason.METADATA_MISSING_REQUIRED_FIELDS,
+                packageName = sourceApp,
+                details = mapOf("missing" to missingFields)
+            )
+            return
+        }
+
+        val album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)?.takeIf { it.isNotBlank() }
 
         val event = NowPlayingEvent(
             title = title,

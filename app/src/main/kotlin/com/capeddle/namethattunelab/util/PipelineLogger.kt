@@ -21,6 +21,12 @@ import javax.inject.Singleton
 @Singleton
 class PipelineLogger @Inject constructor() {
 
+    enum class IgnoredCandidateReason(val value: String) {
+        PACKAGE_NOT_ALLOWLISTED("package_not_allowlisted"),
+        PLAYBACK_NOT_PLAYING("playback_not_playing"),
+        METADATA_MISSING_REQUIRED_FIELDS("metadata_missing_required_fields")
+    }
+
     fun logDetection(event: NowPlayingEvent) {
         Log.d(TAG_NOW_PLAYING, "Detected: \"${event.title}\" by ${event.artist} (source: ${event.sourceApp})")
     }
@@ -56,6 +62,22 @@ class PipelineLogger @Inject constructor() {
 
     fun logSpeechSkipped(artist: String, title: String) {
         Log.d(TAG_SPEECH, "Skipped (cooldown): \"$title\" by $artist")
+    }
+
+    fun logIgnoredCandidate(
+        reason: IgnoredCandidateReason,
+        packageName: String,
+        details: Map<String, String> = emptyMap()
+    ) {
+        val detailSuffix = details.entries
+            .sortedBy { it.key }
+            .joinToString(separator = " ") { "${it.key}=${it.value}" }
+            .let { if (it.isBlank()) "" else " $it" }
+
+        Log.i(
+            TAG_NOW_PLAYING,
+            "Ignored candidate: ${reason.value} package=$packageName$detailSuffix"
+        )
     }
 
     fun logError(tag: String, message: String, throwable: Throwable? = null) {

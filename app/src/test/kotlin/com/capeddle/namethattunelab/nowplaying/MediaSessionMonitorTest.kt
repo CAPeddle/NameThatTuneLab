@@ -21,8 +21,9 @@ class MediaSessionMonitorTest {
 
     private val logger: PipelineLogger = mockk(relaxed = true)
     private val dispatcher = StandardTestDispatcher()
+    private val allowlistPolicy = MediaPackageAllowlistPolicy(setOf(PACKAGE_SPOTIFY), normalize = false)
 
-    private val monitor = MediaSessionMonitor(logger, dispatcher)
+    private val monitor = MediaSessionMonitor(logger, dispatcher, allowlistPolicy)
 
     @Test
     fun `attach registers callback once per package`() {
@@ -79,15 +80,19 @@ class MediaSessionMonitorTest {
 
     @Test
     fun `emits events after detachAll and reattach`() = runTest {
-        val reconnectMonitor = MediaSessionMonitor(logger, StandardTestDispatcher(testScheduler))
+        val reconnectMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
         val controller: MediaController = mockk(relaxed = true)
         every { controller.packageName } returns PACKAGE_SPOTIFY
 
         val metadata: MediaMetadata = mockk(relaxed = true)
-        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns "Track"
-        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns "Artist"
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns TRACK_TITLE
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns TRACK_ARTIST
         every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) } returns null
-        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM) } returns "Album"
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM) } returns TRACK_ALBUM
         every { controller.metadata } returns metadata
 
         val playback: PlaybackState = mockk(relaxed = true)
@@ -105,18 +110,223 @@ class MediaSessionMonitorTest {
             advanceUntilIdle()
 
             val event = awaitItem()
-            assertEquals("Track", event.title)
-            assertEquals("Artist", event.artist)
+            assertEquals(TRACK_TITLE, event.title)
+            assertEquals(TRACK_ARTIST, event.artist)
             assertEquals(PACKAGE_SPOTIFY, event.sourceApp)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
+    @Test
+    fun `should not emit now playing event when package is not allowlisted`() = runTest {
+        val strictMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_NON_ALLOWLISTED
+
+        val metadata: MediaMetadata = mockk(relaxed = true)
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns TRACK_TITLE
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns TRACK_ARTIST
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) } returns null
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM) } returns TRACK_ALBUM
+        every { controller.metadata } returns metadata
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PLAYING
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        strictMonitor.attach(controller, PACKAGE_NON_ALLOWLISTED)
+
+        strictMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            logger.logIgnoredCandidate(
+                PipelineLogger.IgnoredCandidateReason.PACKAGE_NOT_ALLOWLISTED,
+                PACKAGE_NON_ALLOWLISTED,
+                emptyMap()
+            )
+        }
+    }
+
+    @Test
+    fun `should not emit now playing event when playback state is not playing`() = runTest {
+        val strictMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_SPOTIFY
+
+        val metadata: MediaMetadata = mockk(relaxed = true)
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns TRACK_TITLE
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns TRACK_ARTIST
+        every { controller.metadata } returns metadata
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PAUSED
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        strictMonitor.attach(controller, PACKAGE_SPOTIFY)
+
+        strictMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            logger.logIgnoredCandidate(
+                PipelineLogger.IgnoredCandidateReason.PLAYBACK_NOT_PLAYING,
+                PACKAGE_SPOTIFY,
+                mapOf("state" to PlaybackState.STATE_PAUSED.toString())
+            )
+        }
+    }
+
+    @Test
+    fun `should not emit now playing event when playback is playing and metadata is null`() = runTest {
+        val strictMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_SPOTIFY
+        every { controller.metadata } returns null
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PLAYING
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        strictMonitor.attach(controller, PACKAGE_SPOTIFY)
+
+        strictMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            logger.logIgnoredCandidate(
+                PipelineLogger.IgnoredCandidateReason.METADATA_MISSING_REQUIRED_FIELDS,
+                PACKAGE_SPOTIFY,
+                mapOf(KEY_MISSING to "title,artist")
+            )
+        }
+    }
+
+    @Test
+    fun `should not emit now playing event when required metadata is missing`() = runTest {
+        val strictMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_SPOTIFY
+
+        val metadata: MediaMetadata = mockk(relaxed = true)
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns null
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns TRACK_ARTIST
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) } returns null
+        every { controller.metadata } returns metadata
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PLAYING
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        strictMonitor.attach(controller, PACKAGE_SPOTIFY)
+
+        strictMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            logger.logIgnoredCandidate(
+                PipelineLogger.IgnoredCandidateReason.METADATA_MISSING_REQUIRED_FIELDS,
+                PACKAGE_SPOTIFY,
+                mapOf(KEY_MISSING to "title")
+            )
+        }
+    }
+
+    @Test
+    fun `should record telemetry reason when candidate is ignored`() = runTest {
+        val strictMonitor = MediaSessionMonitor(
+            logger,
+            StandardTestDispatcher(testScheduler),
+            allowlistPolicy
+        )
+        val controller: MediaController = mockk(relaxed = true)
+        every { controller.packageName } returns PACKAGE_SPOTIFY
+
+        val metadata: MediaMetadata = mockk(relaxed = true)
+        every { metadata.getString(MediaMetadata.METADATA_KEY_TITLE) } returns TRACK_TITLE
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) } returns ""
+        every { metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) } returns null
+        every { controller.metadata } returns metadata
+
+        val playback: PlaybackState = mockk(relaxed = true)
+        every { playback.state } returns PlaybackState.STATE_PLAYING
+
+        val callbackSlot = slot<MediaController.Callback>()
+        every { controller.registerCallback(capture(callbackSlot)) } answers {}
+
+        strictMonitor.attach(controller, PACKAGE_SPOTIFY)
+
+        strictMonitor.events.test {
+            callbackSlot.captured.onPlaybackStateChanged(playback)
+            advanceUntilIdle()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            logger.logIgnoredCandidate(
+                PipelineLogger.IgnoredCandidateReason.METADATA_MISSING_REQUIRED_FIELDS,
+                PACKAGE_SPOTIFY,
+                mapOf(KEY_MISSING to "artist")
+            )
+        }
+    }
+
     companion object {
         private const val PACKAGE_SPOTIFY = "com.spotify.music"
+        private const val PACKAGE_NON_ALLOWLISTED = "com.example.nonmedia"
         private const val PACKAGE_STALE = "com.stale"
         private const val PACKAGE_ACTIVE = "com.active"
         private const val PACKAGE_ONE = "com.one"
         private const val PACKAGE_TWO = "com.two"
+        private const val KEY_MISSING = "missing"
+        private const val TRACK_TITLE = "Track"
+        private const val TRACK_ARTIST = "Artist"
+        private const val TRACK_ALBUM = "Album"
     }
 }

@@ -1,5 +1,6 @@
 package com.capeddle.namethattunelab.di
 
+import com.capeddle.namethattunelab.nowplaying.MediaPackageAllowlistPolicy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,6 +42,10 @@ object AppModule {
     @Provides
     @Named("main")
     fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+
+    @Provides
+    @Named(MediaPackageAllowlistPolicy.ALLOWLIST_QUALIFIER)
+    fun provideMediaSourceAllowlist(): Set<String> = MediaPackageAllowlistPolicy.DEFAULT_ALLOWED_PACKAGES
 
     // ─────────────────────────────────────────────────────────────────────────
     // Networking
