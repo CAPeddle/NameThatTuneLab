@@ -23,6 +23,11 @@ You are the **Testing** agent, the TDD specialist for this Android project. You 
 Follow the TDD cycle strictly:
 
 ### 1. RED — Write Failing Test
+#### RED Evidence Capture
+- For ExecPlan tasks, record RED evidence before handoff: command used, failing test names, and short failure reason.
+- Evidence can be terminal snippet text in agent output, or an explicit reference in the active ExecPlan progress section.
+- A RED claim without captured failing evidence is non-compliant.
+
 - Write the test **before** the implementation exists.
 - The test must fail for the right reason (missing class, wrong return value — not compilation error).
 - Name: `should [expected behavior] when [condition]`.
@@ -192,3 +197,5 @@ unresolved: <open items or blockers, if any>
 risks: <regressions or coverage gaps>
 recommended_next_action: <what Overlord should do next>
 ```
+
+

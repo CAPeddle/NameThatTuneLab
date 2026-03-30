@@ -68,6 +68,13 @@ Every ExecPlan must include these sections:
 - [ ] All tests pass (`./gradlew test`)
 - [ ] Build succeeds (`./gradlew build`)
 
+## Acceptance Evidence Precision
+
+When marking acceptance criteria complete, include concrete evidence and avoid overstating what was validated:
+- Cite the exact command, test name, artifact, or log proving the criterion.
+- If a test validates an intermediate signal (for example callback invocation), describe it exactly as such.
+- Do not label callback verification as end-to-end runtime launch verification unless launch execution is directly asserted.
+
 ## Mandatory Progress Checkpoints
 
 For every code change within an ExecPlan, record progress through the TDD cycle:
@@ -148,3 +155,4 @@ Size Concrete Steps so each step stays below the **soft threshold of 12** when p
 If an in-progress plan has over-large steps, split them and record the split in `Surprises & Discoveries`.
 
 Split large steps into smaller, independently verifiable sub-steps.
+

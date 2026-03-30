@@ -107,7 +107,9 @@ class UserViewModel @Inject constructor(
 ## Testing Mandates
 
 - Every public function must have at least one unit test.
-- Use **JUnit 5** (`@Test`, `@BeforeEach`, `@Nested`) — not JUnit 4.
+- Prefer **JUnit 5** (`@Test`, `@BeforeEach`, `@Nested`) for unit tests.
+- **Robolectric tests may use JUnit 4 runner only when runner compatibility requires it**; this exception must remain scoped to Robolectric tests and should be migrated to JUnit 5 when practical.
+- Do not mix JUnit 4 and JUnit 5 in the same test file.
 - Use **MockK** for mocking — not Mockito.
 - Use **Turbine** for testing `Flow` emissions.
 - Follow **Triple-A** pattern: Arrange, Act, Assert.
@@ -125,6 +127,11 @@ fun `should return NotFound when user does not exist`() {
 }
 ```
 
+## Telemetry Severity
+
+- Expected policy-filter outcomes (for example allowlist rejects, non-playing drops, missing metadata drops) are **observability signals**, not failures.
+- Log expected drops at debug/info level; reserve error-level logs for unexpected faults only.
+
 ## AI Agent Failure Modes
 
 Watch for these common mistakes when reviewing agent-generated Kotlin code:
@@ -132,9 +139,10 @@ Watch for these common mistakes when reviewing agent-generated Kotlin code:
 1. **Unnecessary `!!` operators** — agents often add not-null assertions instead of proper null handling.
 2. **Hardcoded dispatchers** — agents write `Dispatchers.IO` directly instead of injecting.
 3. **Missing `@Inject` annotations** — agents forget constructor injection annotations.
-4. **JUnit 4 imports** — agents default to `org.junit.Test` instead of `org.junit.jupiter.api.Test`.
+4. **JUnit 4 imports outside approved Robolectric exception** — agents default to `org.junit.Test` instead of `org.junit.jupiter.api.Test`; see Testing Mandates for the narrow Robolectric-runner exception.
 5. **Mockito instead of MockK** — agents suggest Mockito by default; this project uses MockK.
 6. **Mutable collections in public APIs** — agents expose `MutableList` instead of `List`.
 7. **Catching generic exceptions** — agents write `catch (e: Exception)` instead of specific types.
 8. **Missing sealed class exhaustive `when`** — agents add `else` branches instead of handling all cases.
 9. **Swallowing `CancellationException`** — agents write `catch (e: Exception)` or bare `onFailure` in coroutines without re-throwing `CancellationException`, breaking structured concurrency.
+
